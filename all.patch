@@ -1,0 +1,15 @@
+diff --git a/ci/ci.py b/ci/ci.py
+index 98edb0c7bd..65fc101d5d 100644
+--- a/ci/ci.py
++++ b/ci/ci.py
+@@ -243,8 +243,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
+     if with_vanilla_lua:
+         waf_opts.append('--use-vanilla-lua')
+ 
+-    if platform == 'x86_64-linux':
+-        args.append('build_sdk_headers') # gather headers after a successful build
++    # if platform == 'x86_64-linux':
++    #     args.append('build_sdk_headers') # gather headers after a successful build
+ 
+     cmd = ' '.join(args + opts)
+ 
