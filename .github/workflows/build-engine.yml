@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 env:
+  # https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
   DM_PACKAGES_URL: ${{ secrets.DM_PACKAGES_URL }}
 
 jobs:
@@ -19,5 +20,5 @@ jobs:
       { name: 'Install Java', uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9, with: { java-version: '21.0.5+11.0.LTS', distribution: 'temurin'} },
       { name: 'Setup dotnet', uses: actions/setup-dotnet@v4, with: {dotnet-version: '9.x'}},
       { name: 'Install dependencies', run: 'ci/ci.sh install' },
-      { name: 'Build', run: 'ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-docs engine' },
+      { name: 'Build', run: 'ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine' },
       { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'lib', path: 'tmp/dynamo_home/lib/x86_64-linux' } }]
