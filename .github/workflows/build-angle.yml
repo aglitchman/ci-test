@@ -1,3 +1,8 @@
+# https://medium.com/@grplyler/building-and-linking-googles-angle-with-raylib-on-macos-67b07cd380a3
+# https://stackoverflow.com/questions/58903643/setting-up-a-c-project-using-angle-and-glfw-on-windows
+# https://github.com/zwang/helloTriangle/tree/main/include
+# https://discourse.glfw.org/t/how-to-use-angle-glfw/2429/7
+
 name: CI - Google ANGLE
 
 # Controls when the workflow will run
@@ -12,28 +17,30 @@ jobs:
   build-angle-win64:
     runs-on: windows-2022
     steps:
-      # - name: Checkout ANGLE
-      #   uses: actions/checkout@v4
-      #   with: 
-      #     repository: google/angle
-
+      # The point is to checkout from Google sources, since Github version is just a mirror.
       - name: Checkout ANGLE
         run: git clone https://chromium.googlesource.com/angle/angle .
 
-      - name: Gclient quick fix
-        run: echo "" > C:/Users/runneradmin/.gitconfig
+      - name: Update git config for Depot Tools
+        run: |
+            git config --global core.autocrlf false
+            git config --global core.filemode false
+            git config --global core.fscache true
+            git config --global core.preloadindex true
 
       - name: Install Depot Tools
         uses: newkdev/setup-depot-tools@v1.0.1
 
-      - name: Setup
+      - name: Init gclient config
         run: python3 scripts/bootstrap.py
 
-      - name: Install deps
+      - name: Sync deps
         run: gclient sync
 
       - name: Create build
-        run: gn gen out/Debug --args="is_component_build=false"
+        # is_debug=false
+        # Look at gni/angle.gni
+        run: gn gen out/Debug --args="is_component_build=false angle_enable_d3d9=true angle_enable_d3d11=true angle_enable_gl=true angle_enable_null=false angle_enable_vulkan=false angle_enable_wgpu=false angle_enable_swiftshader=false angle_build_tests=false"
 
       - name: Build
         run: autoninja -C out/Debug
@@ -42,13 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: out
-          path: out
-
-      # { name: 'Checkout patches', uses: actions/checkout@v4, with: { path: 'patches' } },
-      # { name: 'Apply patches', run: 'git apply patches/all.patch' },
-      # { name: 'Install Python', uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c, with: { python-version: 3.12 } },
-      # { name: 'Install Java', uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9, with: { java-version: '21.0.5+11.0.LTS', distribution: 'temurin'} },
-      # { name: 'Setup dotnet', uses: actions/setup-dotnet@v4, with: {dotnet-version: '9.x'}},
-      # { name: 'Install dependencies', run: 'ci/ci.sh install' },
-      # { name: 'Build', run: 'ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine' },
-      # { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'lib', path: 'tmp/dynamo_home/lib/x86_64-linux' } }]
+          path: |
+            out
+            !out/Debug/obj
+            !out/Release/obj
