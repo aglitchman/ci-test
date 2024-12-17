@@ -9,16 +9,16 @@ env:
   DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
 jobs:
-  bld-eng-linux-64:
+  build-angle-win64:
     runs-on: windows-2022
     steps:
-      - name: Install Depot Tools
-        uses: newkdev/setup-depot-tools@v1.0.1
-
-      - name: Checkout Angle
+      - name: Checkout ANGLE
         uses: actions/checkout@v4
         with: 
-          repository: 'google/angle'
+          repository: google/angle
+
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
 
       - name: Create build
         run: gn gen out/Debug --args="is_component_build=false"
