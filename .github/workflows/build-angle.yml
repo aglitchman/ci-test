@@ -1,4 +1,4 @@
-name: CI - Defold Engine
+name: CI - Google ANGLE
 
 # Controls when the workflow will run
 on:
