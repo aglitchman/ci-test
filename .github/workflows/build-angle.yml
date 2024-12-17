@@ -21,7 +21,7 @@ jobs:
         uses: newkdev/setup-depot-tools@v1.0.1
 
       - name: Install deps
-        run: gclient
+        run: gclient sync
 
       - name: Create build
         run: gn gen out/Debug --args="is_component_build=false"
