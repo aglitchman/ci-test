@@ -1,0 +1,42 @@
+name: CI - Defold Engine
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  DEPOT_TOOLS_WIN_TOOLCHAIN: 0
+
+jobs:
+  bld-eng-linux-64:
+    runs-on: windows-2022
+    steps:
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
+
+      - name: Checkout Angle
+        uses: actions/checkout@v4
+        with: 
+          repository: 'google/angle'
+
+      - name: Create build
+        run: gn gen out/Debug --args="is_component_build=false"
+
+      - name: Build
+        run: autoninja -C out/Debug
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: out
+          path: out
+
+      # { name: 'Checkout patches', uses: actions/checkout@v4, with: { path: 'patches' } },
+      # { name: 'Apply patches', run: 'git apply patches/all.patch' },
+      # { name: 'Install Python', uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c, with: { python-version: 3.12 } },
+      # { name: 'Install Java', uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9, with: { java-version: '21.0.5+11.0.LTS', distribution: 'temurin'} },
+      # { name: 'Setup dotnet', uses: actions/setup-dotnet@v4, with: {dotnet-version: '9.x'}},
+      # { name: 'Install dependencies', run: 'ci/ci.sh install' },
+      # { name: 'Build', run: 'ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine' },
+      # { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'lib', path: 'tmp/dynamo_home/lib/x86_64-linux' } }]

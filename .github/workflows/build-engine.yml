@@ -1,4 +1,4 @@
-name: CI - Engine
+name: CI - Defold Engine
 
 # Controls when the workflow will run
 on:
