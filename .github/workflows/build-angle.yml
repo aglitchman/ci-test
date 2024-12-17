@@ -21,9 +21,11 @@ jobs:
         uses: newkdev/setup-depot-tools@v1.0.1
 
       - name: Create build
+        shell: cmd
         run: gn gen out/Debug --args="is_component_build=false"
 
       - name: Build
+        shell: cmd
         run: autoninja -C out/Debug
 
       - name: Upload artifacts
