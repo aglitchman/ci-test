@@ -1,0 +1,9 @@
+is_component_build = false
+angle_enable_d3d9 = true
+angle_enable_d3d11 = true
+angle_enable_gl = true
+angle_enable_null = false
+angle_enable_vulkan = false
+angle_enable_wgpu = false
+angle_enable_swiftshader = false
+angle_build_tests = false
