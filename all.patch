@@ -358,13 +358,20 @@ index 3b8d2ca070..9842dbf87d 100644
      conf.env.append_value('INCLUDES', "../src")
      conf.env.append_value('INCLUDES', os.path.join(dynamo_ext, "include"))
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 49fa153ad9..83a0ba303a 100644
+index 49fa153ad9..cbb6c78496 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
-@@ -183,28 +183,32 @@ namespace dmPlatform
-                 params.m_OpenGLVersionHint, major, minor);
-         }
+@@ -176,35 +176,41 @@ namespace dmPlatform
  
+     static PlatformResult OpenWindowOpenGL(Window* wnd, const WindowParams& params)
+     {
+-        uint32_t major = 3, minor = 3;
+-        if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
+-        {
+-            dmLogWarning("OpenGL version hint %d is not supported. Using default version (%d.%d)",
+-                params.m_OpenGLVersionHint, major, minor);
+-        }
+-
 -        bool use_highest_version = major == 0 && minor == 0;
 -        if (!use_highest_version)
 -        {
@@ -387,6 +394,13 @@ index 49fa153ad9..83a0ba303a 100644
 -                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 -            }
 -        }
++        // uint32_t major = 3, minor = 3;
++        // if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
++        // {
++        //     dmLogWarning("OpenGL version hint %d is not supported. Using default version (%d.%d)",
++        //         params.m_OpenGLVersionHint, major, minor);
++        // }
++
 +        // bool use_highest_version = major == 0 && minor == 0;
 +        // if (!use_highest_version)
 +        // {
@@ -395,8 +409,10 @@ index 49fa153ad9..83a0ba303a 100644
 +        // }
 +
 +        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
++        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
++        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
++
 +        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-+        // glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 +
 +        // if (params.m_OpenGLUseCoreProfileHint)
 +        // {
@@ -416,7 +432,26 @@ index 49fa153ad9..83a0ba303a 100644
  
          glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
  
-@@ -274,6 +278,8 @@ namespace dmPlatform
+@@ -215,10 +221,16 @@ namespace dmPlatform
+         }
+ 
+         wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
+-
+         if (!wnd->m_Window)
+         {
+-            return PLATFORM_RESULT_WINDOW_OPEN_ERROR;
++            dmLogError("<!> glfwCreateWindow failed, trying native context api");
++            glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
++            wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
++            if (!wnd->m_Window)
++            {
++                dmLogError("<!> glfwCreateWindow failed");
++                return PLATFORM_RESULT_WINDOW_OPEN_ERROR;
++            }
+         }
+ 
+         wnd->m_SwapIntervalSupported = 1;
+@@ -274,6 +286,8 @@ namespace dmPlatform
  
          PlatformResult res = PLATFORM_RESULT_WINDOW_OPEN_ERROR;
  
