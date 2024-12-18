@@ -425,3 +425,20 @@ index 49fa153ad9..83a0ba303a 100644
          switch(params.m_GraphicsApi)
          {
              case PLATFORM_GRAPHICS_API_OPENGL:
+diff --git a/engine/tools/wscript b/engine/tools/wscript
+index 960fb697a9..cc98512244 100755
+--- a/engine/tools/wscript
++++ b/engine/tools/wscript
+@@ -48,7 +48,11 @@ def configure(conf):
+     elif platform in ["x86_64-linux", "arm64-linux"]:
+         conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
+     elif "win32" in platform:
+-        conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
++        conf.env.append_value('LINKFLAGS', ['user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
++        print("<!> tools: ANGLE LIBPATH AND INCLUDES")
++        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib'])
++        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
++        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
+     elif re.match('arm.*?android', platform):
+         conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
+ 
