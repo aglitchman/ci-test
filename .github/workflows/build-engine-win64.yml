@@ -15,13 +15,49 @@ jobs:
       matrix:
         platform: [x86_64-win32]
     runs-on: windows-2022
-    steps: [
-      { name: 'Checkout Defold', uses: actions/checkout@v4, with: { repository: 'defold/defold', ref: '1.9.6' } },
-      { name: 'Checkout patches', uses: actions/checkout@v4, with: { path: 'patches' } },
-      { name: 'Apply patches', run: 'git apply patches/all.patch' },
-      { name: 'Install Python', uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c, with: { python-version: 3.12} },
-      { name: 'Install Java', uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9, with: { java-version: '21.0.5+11.0.LTS', distribution: 'temurin'} },
-      { name: 'Setup dotnet', uses: actions/setup-dotnet@v4, with: {dotnet-version: '9.x'}},
-      { name: 'Install dependencies', shell: bash, run: 'ci/ci.sh install --platform=${{ matrix.platform }}' },
-      { name: 'Build', shell: bash, run: 'ci/ci.sh --platform=${{ matrix.platform }} --skip-builtins --skip-tests --skip-build-tests --skip-docs engine' },
-      { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'tmp', path: ['tmp/dynamo_home/bin/${{ matrix.platform }}', 'tmp/dynamo_home/lib/${{ matrix.platform }}'] } }]
+    steps:
+      - name: Checkout Defold
+        uses: actions/checkout@v4
+        with:
+          repository: defold/defold
+          ref: 1.9.6
+
+      - name: Checkout patches
+        uses: actions/checkout@v4
+        with:
+          path: patches
+
+      - name: Apply patches
+        run: git apply patches/all.patch
+
+      - name: Install Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+        with:
+          python-version: 3.12
+
+      - name: Install Java
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
+        with:
+          java-version: '21.0.5+11.0.LTS'
+          distribution: temurin
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Install dependencies
+        shell: bash
+        run: ci/ci.sh install --platform=${{ matrix.platform }}
+
+      - name: Build
+        shell: bash
+        run: ci/ci.sh --platform=${{ matrix.platform }} --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tmp
+          path: |
+            tmp/dynamo_home/bin/${{ matrix.platform }}
+            tmp/dynamo_home/lib/${{ matrix.platform }}

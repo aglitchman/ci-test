@@ -12,13 +12,47 @@ env:
 jobs:
   bld-eng-linux-64:
     runs-on: ubuntu-20.04
-    steps: [
-      { name: 'Checkout Defold', uses: actions/checkout@v4, with: { repository: 'defold/defold', ref: '1.9.6' } },
-      { name: 'Checkout patches', uses: actions/checkout@v4, with: { path: 'patches' } },
-      { name: 'Apply patches', run: 'git apply patches/all.patch' },
-      { name: 'Install Python', uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c, with: { python-version: 3.12 } },
-      { name: 'Install Java', uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9, with: { java-version: '21.0.5+11.0.LTS', distribution: 'temurin'} },
-      { name: 'Setup dotnet', uses: actions/setup-dotnet@v4, with: {dotnet-version: '9.x'}},
-      { name: 'Install dependencies', run: 'ci/ci.sh install' },
-      { name: 'Build', run: 'ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine' },
-      { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'lib', path: 'tmp/dynamo_home/lib/x86_64-linux' } }]
+    steps:
+      - name: Checkout Defold
+        uses: actions/checkout@v4
+        with:
+          repository: defold/defold
+          ref: 1.9.6
+
+      - name: Checkout patches
+        uses: actions/checkout@v4
+        with:
+          path: patches
+
+      - name: Apply patches
+        run: git apply patches/all.patch
+
+      - name: Install Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+        with:
+          python-version: 3.12
+
+      - name: Install Java
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
+        with:
+          java-version: '21.0.5+11.0.LTS'
+          distribution: temurin
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+
+      - name: Install dependencies
+        run: ci/ci.sh install
+
+      - name: Build
+        run: ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tmp
+          path: |
+            tmp/dynamo_home/bin/x86_64-linux
+            tmp/dynamo_home/lib/x86_64-linux
