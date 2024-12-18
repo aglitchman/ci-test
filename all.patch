@@ -1,3 +1,18 @@
+diff --git a/build_tools/sdk.py b/build_tools/sdk.py
+index c73b4b5bcc..8af74495e6 100644
+--- a/build_tools/sdk.py
++++ b/build_tools/sdk.py
+@@ -71,8 +71,8 @@ ANDROID_64_NDK_API_VERSION='21' # Android 5.0
+ # Win32
+ 
+ # The version we have prepackaged
+-VERSION_WINDOWS_SDK_10="10.0.20348.0"
+-VERSION_WINDOWS_MSVC_2022="14.37.32822"
++VERSION_WINDOWS_SDK_10="10.0.26100.0"
++VERSION_WINDOWS_MSVC_2022="14.42.34433"
+ PACKAGES_WIN32_TOOLCHAIN=f"Microsoft-Visual-Studio-2022-{VERSION_WINDOWS_MSVC_2022}"
+ PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
+ 
 diff --git a/ci/ci.py b/ci/ci.py
 index 98edb0c7bd..65fc101d5d 100644
 --- a/ci/ci.py
