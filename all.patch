@@ -46,9 +46,24 @@ index 630385dfe9..1b201682de 100644
          # For Vulkan
          if waflib.Options.options.with_vulkan:
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index c94b3374a2..76190f26f7 100644
+index c94b3374a2..22430a439c 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
+@@ -65,10 +65,10 @@
+     #include <EGL/egl.h>
+     #include <GLES/gl.h>
+ #else
+-    #include <GL/gl.h>
+-    #ifndef GLFW_NO_GLU
+-        #include <GL/glu.h>
+-    #endif
++    // #include <GL/gl.h>
++    // #ifndef GLFW_NO_GLU
++    //     #include <GL/glu.h>
++    // #endif
+ #endif
+ 
+ #if defined(__linux__) && !defined(ANDROID)
 @@ -84,124 +84,7 @@
  #elif defined (__MACH__)
      // NOP
@@ -171,7 +186,7 @@ index c94b3374a2..76190f26f7 100644
 -        PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = NULL;
 -        PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = NULL;
 -    #endif
-+    #include <angle_gl.h>
++    // #include <angle_gl.h>
  #elif defined(__EMSCRIPTEN__)
      #include <GL/glext.h>
      #if defined GL_ES_VERSION_2_0
@@ -299,6 +314,31 @@ index c94b3374a2..76190f26f7 100644
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
+diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
+index fce50794ba..37e70c9e5a 100644
+--- a/engine/graphics/src/opengl/graphics_opengl_defines.h
++++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
+@@ -36,12 +36,15 @@
+ #define GL_HAS_RENDERDOC_SUPPORT
+ #include <dlib/safe_windows.h>
+ #include <stdlib.h>
+-#include <GL/gl.h>
+-#include <GL/glu.h>
+-#include <win32/glut.h>
+ 
+-#include "win32/glext.h"
+-#include "win32/glcorearb.h"
++#define GL_GLEXT_PROTOTYPES
++#include <angle_gl.h>
++// #include <GL/gl.h>
++// #include <GL/glu.h>
++// #include <win32/glut.h>
++
++// #include "win32/glext.h"
++// #include "win32/glcorearb.h"
+ 
+ #elif defined (ANDROID)
+ #define GL_GLEXT_PROTOTYPES
 diff --git a/engine/graphics/wscript b/engine/graphics/wscript
 index 3b8d2ca070..9842dbf87d 100644
 --- a/engine/graphics/wscript
