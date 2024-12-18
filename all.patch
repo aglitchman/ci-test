@@ -315,10 +315,10 @@ index c94b3374a2..22430a439c 100644
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
-index fce50794ba..37e70c9e5a 100644
+index fce50794ba..12791a3df4 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
 +++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
-@@ -36,12 +36,15 @@
+@@ -36,12 +36,16 @@
  #define GL_HAS_RENDERDOC_SUPPORT
  #include <dlib/safe_windows.h>
  #include <stdlib.h>
@@ -330,6 +330,7 @@ index fce50794ba..37e70c9e5a 100644
 -#include "win32/glcorearb.h"
 +#define GL_GLEXT_PROTOTYPES
 +#include <angle_gl.h>
++#define GL_BGRA GL_BGRA_EXT
 +// #include <GL/gl.h>
 +// #include <GL/glu.h>
 +// #include <win32/glut.h>
