@@ -5,9 +5,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  # https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
-  # DM_PACKAGES_URL: ${{ secrets.DM_PACKAGES_URL }}
+# env:
+#   # https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
+#   DM_PACKAGES_URL: ${{ secrets.DM_PACKAGES_URL }}
 
 jobs:
   pkg-win32-sdk:
