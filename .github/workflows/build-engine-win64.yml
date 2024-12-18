@@ -33,6 +33,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: local_sdks
+          path: local_sdks
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 12397740775
       - shell: bash
