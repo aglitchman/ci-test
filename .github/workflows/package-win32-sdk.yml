@@ -29,3 +29,5 @@ jobs:
         with:
           name: local_sdks
           path: local_sdks
+          if-no-files-found: error
+
