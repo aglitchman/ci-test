@@ -16,4 +16,4 @@ jobs:
       { name: 'Checkout Defold', uses: actions/checkout@v4, with: { repository: 'defold/defold', ref: '1.9.6' } },
       { name: 'Install Python', uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c, with: { python-version: 3.12} },
       { name: 'Package SDKS', shell: bash, run: './scripts/package/package_win32_sdk.sh' },
-      { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'local_sdks', path: 'scripts/package/local_sdks'] } }]
+      { name: 'Upload Artifact', uses: actions/upload-artifact@v4, with: { name: 'local_sdks', path: 'scripts/package/local_sdks' } }]
