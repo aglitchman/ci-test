@@ -28,3 +28,16 @@ index 98edb0c7bd..65fc101d5d 100644
  
      cmd = ' '.join(args + opts)
  
+diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
+index 49fa153ad9..5372b08158 100644
+--- a/engine/platform/src/platform_window_glfw3.cpp
++++ b/engine/platform/src/platform_window_glfw3.cpp
+@@ -274,6 +274,8 @@ namespace dmPlatform
+ 
+         PlatformResult res = PLATFORM_RESULT_WINDOW_OPEN_ERROR;
+ 
++        dmLogInfo("<!> CUSTOM PLATFORM LIB TEST - OPEN WINDOW: %s", params.m_Title);
++
+         switch(params.m_GraphicsApi)
+         {
+             case PLATFORM_GRAPHICS_API_OPENGL:
