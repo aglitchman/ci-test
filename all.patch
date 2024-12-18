@@ -29,7 +29,7 @@ index 98edb0c7bd..65fc101d5d 100644
      cmd = ' '.join(args + opts)
  
 diff --git a/engine/engine/wscript b/engine/engine/wscript
-index 630385dfe9..5ab4fbbb64 100644
+index 630385dfe9..1b201682de 100644
 --- a/engine/engine/wscript
 +++ b/engine/engine/wscript
 @@ -106,7 +106,11 @@ def configure(conf):
@@ -39,9 +39,9 @@ index 630385dfe9..5ab4fbbb64 100644
 -        conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
 +        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
 +
-+        print("<!> ANGLE LIBPATH AND INCLUDES + TEST PATH %s" % (build_util.get_dynamo_ext("include", "AL")))
-+        conf.env.append_value('INCLUDES', 'patches\\angle\\include')
-+        conf.env.append_value('LIBPATH', 'patches\\angle\\out\\Debug')
++        print("<!> engine: ANGLE LIBPATH AND INCLUDES + TEST PATH %s" % (build_util.get_dynamo_ext("include", "AL")))
++        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
++        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
@@ -299,6 +299,23 @@ index c94b3374a2..76190f26f7 100644
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
+diff --git a/engine/graphics/wscript b/engine/graphics/wscript
+index 3b8d2ca070..9842dbf87d 100644
+--- a/engine/graphics/wscript
++++ b/engine/graphics/wscript
+@@ -55,7 +55,11 @@ def configure(conf):
+     elif platform in ["x86_64-linux", "arm64-linux"]:
+         conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lGL', '-lGLU', '-lpthread'])
+     elif "win32" in platform:
+-        conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
++        print("<!> graphics: ANGLE LIBPATH AND INCLUDES")
++        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib'])
++        # conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
++        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
++        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
+ 
+     conf.env.append_value('INCLUDES', "../src")
+     conf.env.append_value('INCLUDES', os.path.join(dynamo_ext, "include"))
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
 index 49fa153ad9..83a0ba303a 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
