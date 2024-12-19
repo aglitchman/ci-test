@@ -2,9 +2,12 @@
 
 ## Google ANGLE for Defold
 
+https://www.glfw.org/docs/3.4/window_guide.html
+
 TODO:
 
 - [x] Build ANGLE for Windows x64 - `build-angle.yml`.
+- [x] Prepare SDKs for Windows x64 - `package-win32-sdk.yml`.
 - [x] Build Defold with ANGLE - `build-engine-win64.yml`.
 - [ ] Build ANGLE in Release mode.
 - [ ] Archive ANGLE files as `package.tar.gz`.
