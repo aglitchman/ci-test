@@ -10,71 +10,11 @@ env:
   BUILD_BRANCH: 1.9.6
 
 jobs:
-  # bld-eng-windows:
-  #   strategy:
-  #     matrix:
-  #       platform: [x86_64-win32]
-  #   runs-on: windows-2022
-  #   steps:
-  #     - name: Checkout Defold
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: defold/defold
-  #         ref: ${{env.BUILD_BRANCH}}
-
-  #     - name: Checkout patches
-  #       uses: actions/checkout@v4
-  #       with:
-  #         path: patches
-
-  #     - name: Apply patches
-  #       run: git apply patches/all.patch
-
-  #     - name: Download SDKs
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: local_sdks
-  #         path: local_sdks
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         run-id: 12397740775
-  #     - shell: bash
-  #       run: ls -l local_sdks
-
-  #     - name: Install Python
-  #       uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
-  #       with:
-  #         python-version: 3.12
-
-  #     - name: Install Java
-  #       uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
-  #       with:
-  #         java-version: '21.0.5+11.0.LTS'
-  #         distribution: temurin
-
-  #     - name: Setup dotnet
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: '9.x'
-
-  #     - name: Install dependencies
-  #       shell: bash
-  #       run: ci/ci.sh install --platform=${{ matrix.platform }}
-
-  #     - name: Build
-  #       shell: bash
-  #       run: ci/ci.sh --platform=${{ matrix.platform }} --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
-
-  #     - name: Upload Artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: defold-${{ matrix.platform }}
-  #         path: |
-  #           tmp/dynamo_home/bin/${{ matrix.platform }}
-  #           tmp/dynamo_home/lib/${{ matrix.platform }}
-
-  build-bob:
-    # needs: [bld-eng-windows]
-    runs-on: ubuntu-20.04
+  bld-eng-windows:
+    strategy:
+      matrix:
+        platform: [x86_64-win32]
+    runs-on: windows-2022
     steps:
       - name: Checkout Defold
         uses: actions/checkout@v4
@@ -90,6 +30,16 @@ jobs:
       - name: Apply patches
         run: git apply patches/all.patch
 
+      - name: Download SDKs
+        uses: actions/download-artifact@v4
+        with:
+          name: local_sdks
+          path: local_sdks
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 12397740775
+      - shell: bash
+        run: ls -l local_sdks
+
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
         with:
@@ -99,19 +49,25 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
         with:
           java-version: '21.0.5+11.0.LTS'
-          distribution: 'temurin'
+          distribution: temurin
 
-      - name: Build Bob
-        run: ci/ci.sh bob
-        env:
-          DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
 
-      - name: Check Bob version
-        run: java -jar tmp/dynamo_home/share/java/bob.jar --version
+      - name: Install dependencies
+        shell: bash
+        run: ci/ci.sh install --platform=${{ matrix.platform }}
+
+      - name: Build
+        shell: bash
+        run: ci/ci.sh --platform=${{ matrix.platform }} --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bob.jar
+          name: defold-${{ matrix.platform }}
           path: |
-            tmp/dynamo_home/share/java/bob.jar
+            tmp/dynamo_home/bin/${{ matrix.platform }}
+            tmp/dynamo_home/lib/${{ matrix.platform }}
