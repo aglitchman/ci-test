@@ -501,10 +501,10 @@ index 960fb697a9..cc98512244 100755
          conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
  
 diff --git a/scripts/build.py b/scripts/build.py
-index 81004793eb..7491568ee4 100755
+index 81004793eb..8fd68e26ea 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
-@@ -2136,8 +2136,14 @@ class Configuration(object):
+@@ -2136,8 +2136,17 @@ class Configuration(object):
  
  
      def upload_to_archive(self, src_file, dst_path):
@@ -517,7 +517,10 @@ index 81004793eb..7491568ee4 100755
 +        print("                       dst %s" % dst)
 +        self._mkdirs(os.path.join(dst, os.path.dirname(dst_path)))
 +        print("                       mkdirs %s" % os.path.join(dst, os.path.dirname(dst_path)))
-+        self._copy_tree(src_file, os.path.join(dst, dst_path))
++        if os.path.isdir(src_file):
++            self._copy_tree(src_file, os.path.join(dst, dst_path))
++        else:
++            self._copy(src_file, os.path.join(dst, dst_path))
  
  
      def download_from_s3(self, path, url):
