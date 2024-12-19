@@ -500,3 +500,24 @@ index 960fb697a9..cc98512244 100755
      elif re.match('arm.*?android', platform):
          conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
  
+diff --git a/scripts/build.py b/scripts/build.py
+index 81004793eb..7491568ee4 100755
+--- a/scripts/build.py
++++ b/scripts/build.py
+@@ -2136,8 +2136,14 @@ class Configuration(object):
+ 
+ 
+     def upload_to_archive(self, src_file, dst_path):
+-        url = join(self.get_archive_path(), dst_path).replace("\\", "/")
+-        self.upload_to_s3(src_file, url)
++        # url = join(self.get_archive_path(), dst_path).replace("\\", "/")
++        # self.upload_to_s3(src_file, url)
++        print("<!> upload_to_archive: src_file %s, dst_path %s" % (src_file, dst_path))
++        dst = os.path.join(self.defold_root, "tmp/s3")
++        print("                       dst %s" % dst)
++        self._mkdirs(os.path.join(dst, os.path.dirname(dst_path)))
++        print("                       mkdirs %s" % os.path.join(dst, os.path.dirname(dst_path)))
++        self._copy_tree(src_file, os.path.join(dst, dst_path))
+ 
+ 
+     def download_from_s3(self, path, url):

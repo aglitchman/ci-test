@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  # https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
-  DM_PACKAGES_URL: ${{ secrets.DM_PACKAGES_URL }}
+  DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
   BUILD_BRANCH: 1.9.6
 
 jobs:
@@ -48,12 +47,13 @@ jobs:
         run: ci/ci.sh install
 
       - name: Build
-        run: ci/ci.sh --platform=x86_64-linux --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
+        run: ci/ci.sh --platform=x86_64-linux --archive --skip-tests --skip-build-tests engine
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tmp
           path: |
+            tmp/s3
             tmp/dynamo_home/bin/x86_64-linux
             tmp/dynamo_home/lib/x86_64-linux
