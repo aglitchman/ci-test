@@ -103,6 +103,8 @@ jobs:
 
       - name: Build Bob
         run: ci/ci.sh bob
+        env:
+          DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
 
       - name: Check Bob version
         run: java -jar tmp/dynamo_home/share/java/bob.jar --version
