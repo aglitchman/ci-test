@@ -14,7 +14,7 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/ci/ci.py b/ci/ci.py
-index 98edb0c7bd..65fc101d5d 100644
+index 98edb0c7bd..5157e27966 100644
 --- a/ci/ci.py
 +++ b/ci/ci.py
 @@ -243,8 +243,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
@@ -27,6 +27,15 @@ index 98edb0c7bd..65fc101d5d 100644
 +    #     args.append('build_sdk_headers') # gather headers after a successful build
  
      cmd = ' '.join(args + opts)
+ 
+@@ -374,7 +374,7 @@ def install_ext(platform = None):
+     call("python scripts/build.py install_ext %s" % ' '.join(opts))
+ 
+ def build_bob(channel, branch = None):
+-    args = "python scripts/build.py install_sdk install_ext sync_archive build_bob archive_bob".split()
++    args = "python scripts/build.py install_sdk install_ext build_bob archive_bob".split()
+     opts = []
+     opts.append("--channel=%s" % channel)
  
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
 index e54b20a03e..2d87f8f2b5 100644
