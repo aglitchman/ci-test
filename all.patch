@@ -46,7 +46,7 @@ index 630385dfe9..1b201682de 100644
          # For Vulkan
          if waflib.Options.options.with_vulkan:
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index c94b3374a2..22430a439c 100644
+index c94b3374a2..764c3e0ca5 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
 @@ -65,10 +65,10 @@
@@ -314,6 +314,14 @@ index c94b3374a2..22430a439c 100644
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
+@@ -2671,6 +2451,7 @@ static void LogFrameBufferError(GLenum status)
+     {
+         OpenGLContext* context = (OpenGLContext*) _context;
+ 
++        dmLogInfo("<!> OpenGLIsShaderLanguageSupported, context is shader gles %d, context is gles3 %d, requested language %d", context->m_IsShaderLanguageGles, context->m_IsGles3Version, language);
+         if (context->m_IsShaderLanguageGles) // 0 == glsl, 1 == gles
+         {
+             if (context->m_IsGles3Version)
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
 index fce50794ba..12791a3df4 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
@@ -358,7 +366,7 @@ index 3b8d2ca070..9842dbf87d 100644
      conf.env.append_value('INCLUDES', "../src")
      conf.env.append_value('INCLUDES', os.path.join(dynamo_ext, "include"))
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 49fa153ad9..cbb6c78496 100644
+index 49fa153ad9..5cdae5c6ef 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -176,35 +176,41 @@ namespace dmPlatform
@@ -451,15 +459,6 @@ index 49fa153ad9..cbb6c78496 100644
          }
  
          wnd->m_SwapIntervalSupported = 1;
-@@ -274,6 +286,8 @@ namespace dmPlatform
- 
-         PlatformResult res = PLATFORM_RESULT_WINDOW_OPEN_ERROR;
- 
-+        dmLogInfo("<!> CUSTOM PLATFORM LIB TEST - OPEN WINDOW: %s", params.m_Title);
-+
-         switch(params.m_GraphicsApi)
-         {
-             case PLATFORM_GRAPHICS_API_OPENGL:
 diff --git a/engine/tools/wscript b/engine/tools/wscript
 index 960fb697a9..cc98512244 100755
 --- a/engine/tools/wscript
