@@ -1,4 +1,4 @@
-name: CI - Defold Linux 64
+name: Build Defold Linux x86_64
 
 # Controls when the workflow will run
 on:
@@ -8,6 +8,7 @@ on:
 env:
   # https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
   DM_PACKAGES_URL: ${{ secrets.DM_PACKAGES_URL }}
+  BUILD_BRANCH: 1.9.6
 
 jobs:
   bld-eng-linux-64:
@@ -17,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: 1.9.6
+          ref: ${{env.BUILD_BRANCH}}
 
       - name: Checkout patches
         uses: actions/checkout@v4

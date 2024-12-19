@@ -3,7 +3,7 @@
 # https://github.com/zwang/helloTriangle/tree/main/include
 # https://discourse.glfw.org/t/how-to-use-angle-glfw/2429/7
 
-name: CI - Google ANGLE
+name: Build Google ANGLE
 
 # Controls when the workflow will run
 on:
@@ -40,10 +40,10 @@ jobs:
       - name: Create build
         # is_debug=false
         # Look at gni/angle.gni
-        run: gn gen out/Debug --args="is_component_build=false angle_enable_d3d9=true angle_enable_d3d11=true angle_enable_gl=true angle_enable_null=false angle_enable_vulkan=false angle_enable_wgpu=false angle_enable_swiftshader=false angle_build_tests=false"
+        run: gn gen out/Release --args="is_debug=false is_component_build=false angle_enable_d3d9=true angle_enable_d3d11=true angle_enable_gl=true angle_enable_null=false angle_enable_vulkan=false angle_enable_wgpu=false angle_enable_swiftshader=false angle_build_tests=false"
 
       - name: Build
-        run: autoninja -C out/Debug
+        run: autoninja -C out/Release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

@@ -1,4 +1,4 @@
-name: CI - Defold Windows x86_64
+name: Build Defold Windows x86_64
 
 # Controls when the workflow will run
 on:
@@ -76,10 +76,19 @@ jobs:
     # needs: [bld-eng-windows]
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout
+      - name: Checkout Defold
         uses: actions/checkout@v4
         with:
+          repository: defold/defold
           ref: ${{env.BUILD_BRANCH}}
+
+      - name: Checkout patches
+        uses: actions/checkout@v4
+        with:
+          path: patches
+
+      - name: Apply patches
+        run: git apply patches/all.patch
 
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c

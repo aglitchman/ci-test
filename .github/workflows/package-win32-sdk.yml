@@ -1,9 +1,12 @@
-name: CI - Package Win32 SDK
+name: Package Win32 SDK
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  BUILD_BRANCH: 1.9.6
 
 jobs:
   pkg-win32-sdk:
@@ -13,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: 1.9.6
+          ref: ${{env.BUILD_BRANCH}}
 
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
