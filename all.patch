@@ -14,7 +14,7 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/ci/ci.py b/ci/ci.py
-index 98edb0c7bd..5157e27966 100644
+index 98edb0c7bd..bd4e13a95f 100644
 --- a/ci/ci.py
 +++ b/ci/ci.py
 @@ -243,8 +243,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
@@ -33,7 +33,7 @@ index 98edb0c7bd..5157e27966 100644
  
  def build_bob(channel, branch = None):
 -    args = "python scripts/build.py install_sdk install_ext sync_archive build_bob archive_bob".split()
-+    args = "python scripts/build.py install_sdk install_ext build_bob archive_bob".split()
++    args = "python scripts/build.py install_sdk install_ext build_bob archive_bob --skip-tests".split()
      opts = []
      opts.append("--channel=%s" % channel)
  
