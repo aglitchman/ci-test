@@ -54,6 +54,7 @@ jobs:
           mkdir -p tmp/dynamo_home/share/java
           curl -L https://github.com/defold/defold/releases/download/${{env.BUILD_BRANCH}}/bob.jar -o tmp/dynamo_home/share/java/bob.jar
           chmod +x com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
+          DYNAMO_HOME=$(pwd)/tmp/dynamo_home ./com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
 
       - name: Build Bob
         run: ci/ci.sh bob
