@@ -42,7 +42,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tmp
-          path: tmp
+          path: tmp/dynamo_home
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 12423335341
 
