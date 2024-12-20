@@ -44,10 +44,10 @@ jobs:
           name: tmp
           path: tmp
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 12422945759
+          run-id: 12423335341
 
-      - name: List archives
-        run: ls -R tmp/archive
+      - name: List Dynamo home
+        run: ls -R tmp/dynamo_home
 
       - name: Build Bob
         run: ci/ci.sh bob
