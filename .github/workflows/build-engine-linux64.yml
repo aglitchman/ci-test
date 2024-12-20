@@ -54,6 +54,6 @@ jobs:
         with:
           name: tmp
           path: |
-            tmp/archive
+            tmp/dynamo_home/archive
             tmp/dynamo_home/bin/x86_64-linux
             tmp/dynamo_home/lib/x86_64-linux
