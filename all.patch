@@ -37,6 +37,157 @@ index 98edb0c7bd..5157e27966 100644
      opts = []
      opts.append("--channel=%s" % channel)
  
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh b/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
+new file mode 100644
+index 0000000000..dd537da329
+--- /dev/null
++++ b/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
+@@ -0,0 +1,145 @@
++# Copyright 2020-2024 The Defold Foundation
++# Copyright 2014-2020 King
++# Copyright 2009-2014 Ragnar Svensson, Christian Murray
++# Licensed under the Defold License version 1.0 (the "License"); you may not use
++# this file except in compliance with the License.
++# 
++# You may obtain a copy of the License, together with FAQs at
++# https://www.defold.com/license
++# 
++# Unless required by applicable law or agreed to in writing, software distributed
++# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
++# CONDITIONS OF ANY KIND, either express or implied. See the License for the
++# specific language governing permissions and limitations under the License.
++
++# NOTE: This script is only used for CI
++# The corresponding file for development is build.xml
++
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
++
++set -e
++
++SHA1=`git log --pretty=%H -n1`
++
++# DEBUG
++# DYNAMO_HOME=tmp
++# rm -rf tmp
++# mkdir -p tmp
++
++back_cp () {
++    if [[ `unzip -Z1 $DYNAMO_HOME/share/java/bob.jar | grep "$2"` ]];then
++        echo "back_cp: extracting '$2' to '$1'"
++        mkdir -p $(dirname $1)
++        unzip -p $DYNAMO_HOME/share/java/bob.jar "$2" > "$1"
++    else
++        echo "back_cp: '$2' does not exist"
++    fi
++}
++
++# SPIRV toolchain
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/glslang libexec/x86_64-macos/glslang
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/glslang libexec/arm64-macos/glslang
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/glslang libexec/x86_64-linux/glslang
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/glslang libexec/arm64-linux/glslang
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/glslang.exe libexec/x86_64-win32/glslang.exe
++
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/tint libexec/x86_64-macos/tint
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/tint libexec/arm64-macos/tint
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/tint libexec/x86_64-linux/tint
++#back_cp $DYNAMO_HOME/ext/bin/arm64-linux/tint libexec/arm64-linux/tint
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/tint.exe libexec/x86_64-win32/tint.exe
++
++#
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/builtins.zip lib/builtins.zip
++
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-android/classes.dex lib/classes.dex
++back_cp $DYNAMO_HOME/ext/share/java/android.jar lib/android.jar
++
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/dlib.jar lib/dlib.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/modelimporter.jar lib/modelimporter.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/shaderc.jar lib/shaderc.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/texturecompiler.jar lib/texturecompiler.jar
++
++# TEXC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libtexc_shared.so lib/x86_64-linux/libtexc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libtexc_shared.so lib/arm64-linux/libtexc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/texc_shared.dll lib/x86_64-win32/texc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libtexc_shared.dylib lib/x86_64-macos/libtexc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libtexc_shared.dylib lib/arm64-macos/libtexc_shared.dylib
++
++# MODELC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libmodelc_shared.so lib/x86_64-linux/libmodelc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libmodelc_shared.so lib/arm64-linux/libmodelc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/modelc_shared.dll lib/x86_64-win32/modelc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libmodelc_shared.dylib lib/x86_64-macos/libmodelc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libmodelc_shared.dylib lib/arm64-macos/libmodelc_shared.dylib
++
++# SHADERC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libshaderc_shared.so lib/x86_64-linux/libshaderc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libshaderc_shared.so lib/arm64-linux/libshaderc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/shaderc_shared.dll lib/x86_64-win32/shaderc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libshaderc_shared.dylib lib/x86_64-macos/libshaderc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libshaderc_shared.dylib lib/arm64-macos/libshaderc_shared.dylib
++
++
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/luajit-32 libexec/x86_64-linux/luajit-32
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/luajit-64 libexec/x86_64-linux/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/luajit-32 libexec/arm64-linux/luajit-32
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/luajit-64 libexec/arm64-linux/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/luajit-64 libexec/x86_64-macos/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/luajit-64 libexec/arm64-macos/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/win32/luajit-32.exe libexec/x86_64-win32/luajit-32.exe
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/luajit-64.exe libexec/x86_64-win32/luajit-64.exe
++back_cp $DYNAMO_HOME/ext/share/luajit-share.zip lib/luajit-share.zip
++unzip -o $DYNAMO_HOME/ext/share/luajit-share.zip -d $DYNAMO_HOME/ext/share/
++# jar cfM lib/luajit-share.zip -C $DYNAMO_HOME/ext/share/ luajit
++
++#LIPO
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/lipo libexec/x86_64-macos/lipo
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/lipo libexec/arm64-macos/lipo
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/lipo libexec/x86_64-linux/lipo
++#back_cp $DYNAMO_HOME/ext/bin/arm64-linux/lipo libexec/arm64-linux/lipo
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/lipo.exe libexec/x86_64-win32/lipo.exe
++
++copy () {
++    back_cp $DYNAMO_HOME/archive/${SHA1}/engine/$1 libexec/$2
++}
++
++copy x86_64-linux/stripped/dmengine x86_64-linux/dmengine
++copy x86_64-linux/stripped/dmengine_release x86_64-linux/dmengine_release
++# copy x86_64-linux/stripped/dmengine_headless x86_64-linux/dmengine_headless
++#copy arm64-linux/stripped/dmengine arm64-linux/dmengine
++#copy arm64-linux/stripped/dmengine_release arm64-linux/dmengine_release
++# copy arm64-linux/stripped/dmengine_headless arm64-linux/dmengine_headless
++copy x86_64-macos/stripped/dmengine x86_64-macos/dmengine
++copy x86_64-macos/stripped/dmengine_release x86_64-macos/dmengine_release
++# copy x86_64-macos/stripped/dmengine_headless x86_64-macos/dmengine_headless
++copy arm64-macos/stripped/dmengine arm64-macos/dmengine
++copy arm64-macos/stripped/dmengine_release arm64-macos/dmengine_release
++# copy arm64-macos/stripped/dmengine_headless arm64-macos/dmengine_headless
++# copy win32/dmengine.exe x86-win32/dmengine.exe
++# copy win32/dmengine_release.exe x86-win32/dmengine_release.exe
++# copy win32/dmengine_headless.exe x86-win32/dmengine_headless.exe
++copy x86_64-win32/dmengine.exe x86_64-win32/dmengine.exe
++copy x86_64-win32/dmengine_release.exe x86_64-win32/dmengine_release.exe
++# copy x86_64-win32/dmengine_headless.exe x86_64-win32/dmengine_headless.exe
++copy arm64-ios/stripped/dmengine arm64-ios/dmengine
++copy arm64-ios/stripped/dmengine_release arm64-ios/dmengine_release
++copy x86_64-ios/stripped/dmengine x86_64-ios/dmengine
++copy x86_64-ios/stripped/dmengine_release x86_64-ios/dmengine_release
++# copy armv7-android/stripped/libdmengine.so armv7-android/libdmengine.so
++# copy armv7-android/stripped/libdmengine_release.so armv7-android/libdmengine_release.so
++copy arm64-android/stripped/libdmengine.so arm64-android/libdmengine.so # TODO only valid once arm64-android CI target is present --jbnn
++copy arm64-android/stripped/libdmengine_release.so arm64-android/libdmengine_release.so # TODO only valid once arm64-android CI target is present --jbnn
++# copy js-web/dmengine.js js-web/dmengine.js
++# copy js-web/dmengine.js.mem js-web/dmengine.js.mem
++# copy js-web/dmengine_release.js js-web/dmengine_release.js
++# copy js-web/dmengine_release.js.mem js-web/dmengine_release.js.mem
++copy wasm-web/dmengine.js wasm-web/dmengine.js
++copy wasm-web/dmengine.wasm wasm-web/dmengine.wasm
++copy wasm-web/dmengine_release.js wasm-web/dmengine_release.js
++copy wasm-web/dmengine_release.wasm wasm-web/dmengine_release.wasm
++
++if [ -e "${DIR}/copy_private.sh" ]; then
++    sh ${DIR}/copy_private.sh
++fi
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
 index e54b20a03e..2d87f8f2b5 100644
 --- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
