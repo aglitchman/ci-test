@@ -501,10 +501,23 @@ index 960fb697a9..cc98512244 100755
          conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
  
 diff --git a/scripts/build.py b/scripts/build.py
-index 81004793eb..d1eba935bd 100755
+index 81004793eb..42cd4dc966 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
-@@ -2136,8 +2136,17 @@ class Configuration(object):
+@@ -1368,9 +1368,12 @@ class Configuration(object):
+         test_dir = join(self.defold_root, 'com.dynamo.cr/com.dynamo.cr.bob.test')
+ 
+         sha1 = self._git_sha1()
++        print("<!> path is %s" % os.path.join(self.dynamo_home, 'archive', sha1))
+         if os.path.exists(os.path.join(self.dynamo_home, 'archive', sha1)):
++            print("<!> copy.sh")
+             run.env_shell_command(self._form_env(), "./scripts/copy.sh", cwd=bob_dir)
+         else:
++            print("<!> copy_local_bob_artefacts")
+             self.copy_local_bob_artefacts()
+ 
+         env = self._form_env()
+@@ -2136,8 +2139,17 @@ class Configuration(object):
  
  
      def upload_to_archive(self, src_file, dst_path):

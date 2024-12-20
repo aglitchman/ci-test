@@ -45,6 +45,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 12422712163
 
+      - name: List archives
+        run: ls -R tmp/archive
+
       - name: Build Bob
         run: ci/ci.sh bob
 
