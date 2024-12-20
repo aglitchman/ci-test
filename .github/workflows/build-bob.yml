@@ -42,6 +42,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tmp
+          path: tmp
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 12422712163
 
