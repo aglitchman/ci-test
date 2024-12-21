@@ -256,6 +256,22 @@ index 630385dfe9..1b201682de 100644
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
+diff --git a/engine/graphics/src/graphics.cpp b/engine/graphics/src/graphics.cpp
+index 4da4697d56..1492eab368 100644
+--- a/engine/graphics/src/graphics.cpp
++++ b/engine/graphics/src/graphics.cpp
+@@ -304,9 +304,11 @@ namespace dmGraphics
+         assert(shader_desc);
+         ShaderDesc::Shader* selected_shader = 0x0;
+ 
++        dmLogInfo("<!> GetShaderProgram: shader_desc->m_Shaders.m_Count: %d", shader_desc->m_Shaders.m_Count);
+         for(uint32_t i = 0; i < shader_desc->m_Shaders.m_Count; ++i)
+         {
+             ShaderDesc::Shader* shader = &shader_desc->m_Shaders.m_Data[i];
++            dmLogInfo("<!> GetShaderProgram: shader->m_Language: %d, shader_desc->m_ShaderType: %d", shader->m_Language, shader_desc->m_ShaderType);
+             if(IsShaderLanguageSupported(context, shader->m_Language, shader_desc->m_ShaderType))
+             {
+                 if (shader->m_VariantTextureArray)
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
 index c94b3374a2..764c3e0ca5 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
