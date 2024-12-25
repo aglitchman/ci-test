@@ -38,14 +38,14 @@ index 98edb0c7bd..bd4e13a95f 100644
      opts.append("--channel=%s" % channel)
  
 diff --git a/engine/sound/src/devices/device_js.cpp b/engine/sound/src/devices/device_js.cpp
-index 22dbc6e5cc..606e039c38 100644
+index 22dbc6e5cc..faa19bbf1f 100644
 --- a/engine/sound/src/devices/device_js.cpp
 +++ b/engine/sound/src/devices/device_js.cpp
 @@ -87,6 +87,7 @@ namespace dmDeviceJS
          assert(info);
          JSDevice *dev = (JSDevice*) device;
          info->m_MixRate = dmGetDeviceSampleRate(dev->devId);
-+        info->m_FrameCount = info->m_MixRate * 0.025;
++        info->m_FrameCount = info->m_MixRate * 0.022;
      }
  
      void DeviceJSStart(dmSound::HDevice device)
