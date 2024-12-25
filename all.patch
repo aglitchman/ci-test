@@ -687,14 +687,14 @@ index 49fa153ad9..5cdae5c6ef 100644
  
          wnd->m_SwapIntervalSupported = 1;
 diff --git a/engine/sound/src/devices/device_js.cpp b/engine/sound/src/devices/device_js.cpp
-index 22dbc6e5cc..d83794e356 100644
+index 22dbc6e5cc..52be6e93f7 100644
 --- a/engine/sound/src/devices/device_js.cpp
 +++ b/engine/sound/src/devices/device_js.cpp
 @@ -87,6 +87,8 @@ namespace dmDeviceJS
          assert(info);
          JSDevice *dev = (JSDevice*) device;
          info->m_MixRate = dmGetDeviceSampleRate(dev->devId);
-+        info->m_FrameCount = (info->m_MixRate * 0.00625) << 2;
++        info->m_FrameCount = uint32_t(info->m_MixRate * 0.00625) << 2;
 +        dmLogInfo("<!> DeviceJS: info->m_MixRate: %d, info->m_FrameCount: %d", info->m_MixRate, info->m_FrameCount);
      }
  
