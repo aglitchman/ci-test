@@ -687,10 +687,37 @@ index bd80fa2574..e18c5f8494 100644
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..b688b690e0 100644
+index 673399f73f..3588c5d68a 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
-@@ -181,36 +181,6 @@ namespace dmPlatform
+@@ -147,10 +147,15 @@ namespace dmPlatform
+     #endif
+ 
+     #if defined(__linux__) && !defined(ANDROID)
+-        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_PREFER_LIBDECOR);
+-        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
++        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
++        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
++
++        dmLogInfo("<!> GLFW is Wayland supported: %d", glfwPlatformSupported(GLFW_PLATFORM_WAYLAND));
++        dmLogInfo("<!> GLFW is X11 supported: %d", glfwPlatformSupported(GLFW_PLATFORM_X11));
+     #endif
+ 
++        glfwSetErrorCallback(OnError);
++
+         if (glfwInit() == GL_FALSE)
+         {
+             dmLogError("Could not initialize glfw.");
+@@ -160,8 +165,6 @@ namespace dmPlatform
+         dmWindow* wnd = new dmWindow;
+         memset(wnd, 0, sizeof(dmWindow));
+ 
+-        glfwSetErrorCallback(OnError);
+-
+         // Reset context
+         memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
+ 
+@@ -181,36 +184,6 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
@@ -727,7 +754,7 @@ index 673399f73f..b688b690e0 100644
          glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
  
          GLFWmonitor* fullscreen_monitor = NULL;
-@@ -219,7 +189,24 @@ namespace dmPlatform
+@@ -219,7 +192,24 @@ namespace dmPlatform
              fullscreen_monitor = glfwGetPrimaryMonitor();
          }
  
