@@ -11,7 +11,6 @@ env:
 jobs:
   pkg-win32-sdk:
     runs-on: windows-2022
-    container: europe-west1-docker.pkg.dev/extender-426409/extender-public-registry/extender-winsdk-2022-env:latest
 
     steps:
       - name: Checkout Defold

@@ -1,12 +1,15 @@
+# Keep this in sync with
+# https://github.com/defold/defold/blob/dev/.github/workflows/engine-nightly.yml
+
 name: Build Defold Web (.wasm)
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 
 env:
   BUILD_BRANCH: 1.9.6

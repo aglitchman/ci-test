@@ -51,6 +51,7 @@ jobs:
           name: tmp
           path: tmp/dynamo_home
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Linux x86_64 run id
           run-id: 12423335341
 
       - name: List Dynamo home

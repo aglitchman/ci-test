@@ -1,12 +1,15 @@
+# Keep this in sync with
+# https://github.com/defold/defold/blob/dev/.github/workflows/engine-nightly.yml
+
 name: Build Defold Windows x86_64
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 
 env:
   DM_PACKAGES_URL: ./local_sdks
@@ -39,7 +42,11 @@ jobs:
           name: local_sdks
           path: local_sdks
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 12397740775
+          # Settings / Secrets and variables / Actions / Variables (tab) -> 
+          #   New repository variable -> 
+          #   `WIN32_SDK_RUN_ID` = copy-paste from the run id of the `package-win32-sdk.yml` run, i.e.
+          #   "https://github.com/example/repo/actions/runs/12397740775" <- 12397740775 is the run id
+          run-id: ${{ env.WIN32_SDK_RUN_ID }}
       - shell: bash
         run: ls -l local_sdks
 
