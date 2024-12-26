@@ -61,14 +61,14 @@ jobs:
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install --no-install-recommends crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libstdc++-10-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
+          sudo apt install --no-install-recommends crossbuild-essential-arm64 binutils-aarch64-linux-gnu gcc-multilib g++-multilib libc6-dev:arm64 libstdc++-10-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
 
       - name: Install dependencies
         run: ci/ci.sh install --platform=${{ matrix.platform }}
 
-      - run: |
-          clang -v
-          sudo apt remove clang-12
+      # - run: |
+      #     clang -v
+      #     sudo apt remove clang-12
 
       - name: Build
         if: matrix.platform == 'x86_64-linux'
