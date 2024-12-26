@@ -66,6 +66,8 @@ jobs:
       - name: Install dependencies
         run: ci/ci.sh install --platform=${{ matrix.platform }}
 
+      - run: sudo apt remove clang clang++
+
       - name: Build
         if: matrix.platform == 'x86_64-linux'
         run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-tests --skip-build-tests engine
