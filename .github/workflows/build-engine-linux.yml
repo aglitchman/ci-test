@@ -53,17 +53,6 @@ jobs:
         with:
           dotnet-version: 9.x
 
-      - name: Install ARM64 dependencies
-        if: matrix.platform == 'arm64-linux'
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-          sudo apt update
-          sudo apt install --no-install-recommends crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libstdc++-10-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
-
       # - name: Install dependencies
       #   run: ci/ci.sh install --platform=${{ matrix.platform }}
 
@@ -79,6 +68,18 @@ jobs:
 
       - run: |
           clang -v
+
+      # libstdc++-10-dev:arm64 
+      - name: Install ARM64 dependencies
+        if: matrix.platform == 'arm64-linux'
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          sudo apt update
+          sudo apt install --no-install-recommends crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
 
       - name: Build
         if: matrix.platform == 'x86_64-linux'
