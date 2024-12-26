@@ -61,9 +61,8 @@ jobs:
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install --no-install-recommends libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
+          sudo apt install --no-install-recommends libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
 
-      # The step uses DM_PACKAGES_URL to download the Clang
       - name: Install dependencies
         run: ci/ci.sh install --platform=${{ matrix.platform }}
 
