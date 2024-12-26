@@ -91,9 +91,18 @@ jobs:
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
+        if: matrix.platform == 'x86_64-linux'
         with:
           name: defold-${{ matrix.platform }}
           path: |
             tmp/dynamo_home/archive
             tmp/dynamo_home/bin/${{ matrix.platform }}
             tmp/dynamo_home/lib/${{ matrix.platform }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: matrix.platform == 'arm64-linux'
+        with:
+          name: defold-${{ matrix.platform }}
+          path: |
+            tmp/dynamo_home/bin/${{ matrix.platform }}
