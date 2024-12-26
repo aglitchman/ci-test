@@ -14,7 +14,7 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
-index 5c9e4a517b..5e52653972 100644
+index 4bd9ca09f7..a67e0255fc 100644
 --- a/build_tools/waf_dynamo.py
 +++ b/build_tools/waf_dynamo.py
 @@ -1881,8 +1881,11 @@ def detect(conf):
@@ -31,10 +31,10 @@ index 5c9e4a517b..5e52653972 100644
      if platform in ('x86_64-macos','arm64-macos'):
          conf.env['FRAMEWORK_OPENAL'] = ['OpenAL']
 diff --git a/ci/ci.py b/ci/ci.py
-index 98edb0c7bd..fe88f9f173 100644
+index 468b4ffeee..d99f3dc196 100644
 --- a/ci/ci.py
 +++ b/ci/ci.py
-@@ -203,7 +203,7 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
+@@ -204,7 +204,7 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
  
      install_sdk = 'install_sdk'
      # for some platforms, we use the locally installed platform sdk
@@ -43,7 +43,7 @@ index 98edb0c7bd..fe88f9f173 100644
          install_sdk = ''
  
      args = ('python scripts/build.py distclean %s install_ext check_sdk' % install_sdk).split()
-@@ -243,8 +243,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
+@@ -244,8 +244,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
      if with_vanilla_lua:
          waf_opts.append('--use-vanilla-lua')
  
@@ -54,7 +54,7 @@ index 98edb0c7bd..fe88f9f173 100644
  
      cmd = ' '.join(args + opts)
  
-@@ -374,7 +374,7 @@ def install_ext(platform = None):
+@@ -375,7 +375,7 @@ def install_ext(platform = None):
      call("python scripts/build.py install_ext %s" % ' '.join(opts))
  
  def build_bob(channel, branch = None):
@@ -253,7 +253,7 @@ index e54b20a03e..6859214c6a 100644
                  case Arm64Ios:
                  case X86_64Ios: {
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
-index 2961981be6..a7782db053 100644
+index eb2ef1ae25..2709d6aee5 100644
 --- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
 +++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
 @@ -140,6 +140,8 @@ public abstract class ShaderProgramBuilder extends Builder {
@@ -266,7 +266,7 @@ index 2961981be6..a7782db053 100644
          IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
          ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
 diff --git a/engine/engine/wscript b/engine/engine/wscript
-index 630385dfe9..1b201682de 100644
+index e002b73190..8df493de05 100644
 --- a/engine/engine/wscript
 +++ b/engine/engine/wscript
 @@ -106,7 +106,11 @@ def configure(conf):
@@ -283,7 +283,7 @@ index 630385dfe9..1b201682de 100644
          # For Vulkan
          if waflib.Options.options.with_vulkan:
 diff --git a/engine/gamesys/wscript b/engine/gamesys/wscript
-index 1b00fcdd2d..4c5815a8ff 100644
+index ad03b4201c..82d91e6814 100644
 --- a/engine/gamesys/wscript
 +++ b/engine/gamesys/wscript
 @@ -40,8 +40,11 @@ def configure(conf):
@@ -300,10 +300,10 @@ index 1b00fcdd2d..4c5815a8ff 100644
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
  
 diff --git a/engine/graphics/src/graphics.cpp b/engine/graphics/src/graphics.cpp
-index 4da4697d56..1492eab368 100644
+index 79e32f8bcb..773c8c4390 100644
 --- a/engine/graphics/src/graphics.cpp
 +++ b/engine/graphics/src/graphics.cpp
-@@ -304,9 +304,11 @@ namespace dmGraphics
+@@ -318,9 +318,11 @@ namespace dmGraphics
          assert(shader_desc);
          ShaderDesc::Shader* selected_shader = 0x0;
  
@@ -316,7 +316,7 @@ index 4da4697d56..1492eab368 100644
              {
                  if (shader->m_VariantTextureArray)
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index c94b3374a2..a637a2e1c2 100644
+index 916e47abff..9fdb4fff0b 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
 @@ -65,14 +65,18 @@
@@ -469,7 +469,7 @@ index c94b3374a2..a637a2e1c2 100644
  #elif defined(__EMSCRIPTEN__)
      #include <GL/glext.h>
      #if defined GL_ES_VERSION_2_0
-@@ -965,113 +852,10 @@ static void LogFrameBufferError(GLenum status)
+@@ -967,113 +854,10 @@ static void LogFrameBufferError(GLenum status)
          assert(_context);
          OpenGLContext* context = (OpenGLContext*) _context;
  
@@ -584,7 +584,7 @@ index c94b3374a2..a637a2e1c2 100644
          context->m_IsShaderLanguageGles = 1;
  
          const char* version = (char *) glGetString(GL_VERSION);
-@@ -1434,7 +1218,7 @@ static void LogFrameBufferError(GLenum status)
+@@ -1443,7 +1227,7 @@ static void LogFrameBufferError(GLenum status)
          #endif
          }
  
@@ -593,7 +593,7 @@ index c94b3374a2..a637a2e1c2 100644
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
-@@ -2671,6 +2455,7 @@ static void LogFrameBufferError(GLenum status)
+@@ -2918,6 +2702,7 @@ static void LogFrameBufferError(GLenum status)
      {
          OpenGLContext* context = (OpenGLContext*) _context;
  
@@ -602,7 +602,7 @@ index c94b3374a2..a637a2e1c2 100644
          {
              if (context->m_IsGles3Version)
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
-index fce50794ba..93ca6cb781 100644
+index dfde827c3a..326238979b 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
 +++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
 @@ -17,10 +17,17 @@
@@ -687,12 +687,12 @@ index bd80fa2574..e18c5f8494 100644
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 49fa153ad9..16db3e1f03 100644
+index 673399f73f..005ff7cb7e 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
-@@ -176,36 +176,6 @@ namespace dmPlatform
+@@ -181,36 +181,6 @@ namespace dmPlatform
  
-     static PlatformResult OpenWindowOpenGL(Window* wnd, const WindowParams& params)
+     static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
 -        uint32_t major = 3, minor = 3;
 -        if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
@@ -727,7 +727,7 @@ index 49fa153ad9..16db3e1f03 100644
          glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
  
          GLFWmonitor* fullscreen_monitor = NULL;
-@@ -214,7 +184,24 @@ namespace dmPlatform
+@@ -219,7 +189,24 @@ namespace dmPlatform
              fullscreen_monitor = glfwGetPrimaryMonitor();
          }
  
@@ -821,8 +821,18 @@ index 960fb697a9..8a8a3fa7ed 100755
      elif re.match('arm.*?android', platform):
          conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
  
+diff --git a/patch-and-copy-angle b/patch-and-copy-angle
+new file mode 100644
+index 0000000000..43f7ae3e9e
+--- /dev/null
++++ b/patch-and-copy-angle
+@@ -0,0 +1,4 @@
++#!/bin/bash
++
++git diff --cached > angle.patch && cp angle.patch /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/all.patch
++
 diff --git a/scripts/build.py b/scripts/build.py
-index 81004793eb..0caf876c51 100755
+index ccaa10a75a..c10393fab6 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
 @@ -35,7 +35,7 @@ from threading import Thread, Event

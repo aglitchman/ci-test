@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: 7543cd69b8815e762e5a8fb39c3762a734ae5b23
+          ref: 04f21d84f5acd3e9bfae06121729afb2a4c69ab0
 
       - name: Checkout patches
         uses: actions/checkout@v4
