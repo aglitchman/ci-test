@@ -37,15 +37,233 @@ index 98edb0c7bd..bd4e13a95f 100644
      opts = []
      opts.append("--channel=%s" % channel)
  
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh b/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
+new file mode 100644
+index 0000000000..dd537da329
+--- /dev/null
++++ b/com.dynamo.cr/com.dynamo.cr.bob/scripts/copy_from_bob.sh
+@@ -0,0 +1,145 @@
++# Copyright 2020-2024 The Defold Foundation
++# Copyright 2014-2020 King
++# Copyright 2009-2014 Ragnar Svensson, Christian Murray
++# Licensed under the Defold License version 1.0 (the "License"); you may not use
++# this file except in compliance with the License.
++# 
++# You may obtain a copy of the License, together with FAQs at
++# https://www.defold.com/license
++# 
++# Unless required by applicable law or agreed to in writing, software distributed
++# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
++# CONDITIONS OF ANY KIND, either express or implied. See the License for the
++# specific language governing permissions and limitations under the License.
++
++# NOTE: This script is only used for CI
++# The corresponding file for development is build.xml
++
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
++
++set -e
++
++SHA1=`git log --pretty=%H -n1`
++
++# DEBUG
++# DYNAMO_HOME=tmp
++# rm -rf tmp
++# mkdir -p tmp
++
++back_cp () {
++    if [[ `unzip -Z1 $DYNAMO_HOME/share/java/bob.jar | grep "$2"` ]];then
++        echo "back_cp: extracting '$2' to '$1'"
++        mkdir -p $(dirname $1)
++        unzip -p $DYNAMO_HOME/share/java/bob.jar "$2" > "$1"
++    else
++        echo "back_cp: '$2' does not exist"
++    fi
++}
++
++# SPIRV toolchain
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/glslang libexec/x86_64-macos/glslang
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/glslang libexec/arm64-macos/glslang
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/glslang libexec/x86_64-linux/glslang
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/glslang libexec/arm64-linux/glslang
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/glslang.exe libexec/x86_64-win32/glslang.exe
++
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/tint libexec/x86_64-macos/tint
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/tint libexec/arm64-macos/tint
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/tint libexec/x86_64-linux/tint
++#back_cp $DYNAMO_HOME/ext/bin/arm64-linux/tint libexec/arm64-linux/tint
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/tint.exe libexec/x86_64-win32/tint.exe
++
++#
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/builtins.zip lib/builtins.zip
++
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-android/classes.dex lib/classes.dex
++back_cp $DYNAMO_HOME/ext/share/java/android.jar lib/android.jar
++
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/dlib.jar lib/dlib.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/modelimporter.jar lib/modelimporter.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/shaderc.jar lib/shaderc.jar
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/share/java/texturecompiler.jar lib/texturecompiler.jar
++
++# TEXC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libtexc_shared.so lib/x86_64-linux/libtexc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libtexc_shared.so lib/arm64-linux/libtexc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/texc_shared.dll lib/x86_64-win32/texc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libtexc_shared.dylib lib/x86_64-macos/libtexc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libtexc_shared.dylib lib/arm64-macos/libtexc_shared.dylib
++
++# MODELC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libmodelc_shared.so lib/x86_64-linux/libmodelc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libmodelc_shared.so lib/arm64-linux/libmodelc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/modelc_shared.dll lib/x86_64-win32/modelc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libmodelc_shared.dylib lib/x86_64-macos/libmodelc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libmodelc_shared.dylib lib/arm64-macos/libmodelc_shared.dylib
++
++# SHADERC Shared
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-linux/libshaderc_shared.so lib/x86_64-linux/libshaderc_shared.so
++#back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-linux/libshaderc_shared.so lib/arm64-linux/libshaderc_shared.so
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-win32/shaderc_shared.dll lib/x86_64-win32/shaderc_shared.dll
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/x86_64-macos/libshaderc_shared.dylib lib/x86_64-macos/libshaderc_shared.dylib
++back_cp $DYNAMO_HOME/archive/${SHA1}/engine/arm64-macos/libshaderc_shared.dylib lib/arm64-macos/libshaderc_shared.dylib
++
++
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/luajit-32 libexec/x86_64-linux/luajit-32
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/luajit-64 libexec/x86_64-linux/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/luajit-32 libexec/arm64-linux/luajit-32
++back_cp $DYNAMO_HOME/ext/bin/arm64-linux/luajit-64 libexec/arm64-linux/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/luajit-64 libexec/x86_64-macos/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/luajit-64 libexec/arm64-macos/luajit-64
++back_cp $DYNAMO_HOME/ext/bin/win32/luajit-32.exe libexec/x86_64-win32/luajit-32.exe
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/luajit-64.exe libexec/x86_64-win32/luajit-64.exe
++back_cp $DYNAMO_HOME/ext/share/luajit-share.zip lib/luajit-share.zip
++unzip -o $DYNAMO_HOME/ext/share/luajit-share.zip -d $DYNAMO_HOME/ext/share/
++# jar cfM lib/luajit-share.zip -C $DYNAMO_HOME/ext/share/ luajit
++
++#LIPO
++back_cp $DYNAMO_HOME/ext/bin/x86_64-macos/lipo libexec/x86_64-macos/lipo
++back_cp $DYNAMO_HOME/ext/bin/arm64-macos/lipo libexec/arm64-macos/lipo
++back_cp $DYNAMO_HOME/ext/bin/x86_64-linux/lipo libexec/x86_64-linux/lipo
++#back_cp $DYNAMO_HOME/ext/bin/arm64-linux/lipo libexec/arm64-linux/lipo
++back_cp $DYNAMO_HOME/ext/bin/x86_64-win32/lipo.exe libexec/x86_64-win32/lipo.exe
++
++copy () {
++    back_cp $DYNAMO_HOME/archive/${SHA1}/engine/$1 libexec/$2
++}
++
++copy x86_64-linux/stripped/dmengine x86_64-linux/dmengine
++copy x86_64-linux/stripped/dmengine_release x86_64-linux/dmengine_release
++# copy x86_64-linux/stripped/dmengine_headless x86_64-linux/dmengine_headless
++#copy arm64-linux/stripped/dmengine arm64-linux/dmengine
++#copy arm64-linux/stripped/dmengine_release arm64-linux/dmengine_release
++# copy arm64-linux/stripped/dmengine_headless arm64-linux/dmengine_headless
++copy x86_64-macos/stripped/dmengine x86_64-macos/dmengine
++copy x86_64-macos/stripped/dmengine_release x86_64-macos/dmengine_release
++# copy x86_64-macos/stripped/dmengine_headless x86_64-macos/dmengine_headless
++copy arm64-macos/stripped/dmengine arm64-macos/dmengine
++copy arm64-macos/stripped/dmengine_release arm64-macos/dmengine_release
++# copy arm64-macos/stripped/dmengine_headless arm64-macos/dmengine_headless
++# copy win32/dmengine.exe x86-win32/dmengine.exe
++# copy win32/dmengine_release.exe x86-win32/dmengine_release.exe
++# copy win32/dmengine_headless.exe x86-win32/dmengine_headless.exe
++copy x86_64-win32/dmengine.exe x86_64-win32/dmengine.exe
++copy x86_64-win32/dmengine_release.exe x86_64-win32/dmengine_release.exe
++# copy x86_64-win32/dmengine_headless.exe x86_64-win32/dmengine_headless.exe
++copy arm64-ios/stripped/dmengine arm64-ios/dmengine
++copy arm64-ios/stripped/dmengine_release arm64-ios/dmengine_release
++copy x86_64-ios/stripped/dmengine x86_64-ios/dmengine
++copy x86_64-ios/stripped/dmengine_release x86_64-ios/dmengine_release
++# copy armv7-android/stripped/libdmengine.so armv7-android/libdmengine.so
++# copy armv7-android/stripped/libdmengine_release.so armv7-android/libdmengine_release.so
++copy arm64-android/stripped/libdmengine.so arm64-android/libdmengine.so # TODO only valid once arm64-android CI target is present --jbnn
++copy arm64-android/stripped/libdmengine_release.so arm64-android/libdmengine_release.so # TODO only valid once arm64-android CI target is present --jbnn
++# copy js-web/dmengine.js js-web/dmengine.js
++# copy js-web/dmengine.js.mem js-web/dmengine.js.mem
++# copy js-web/dmengine_release.js js-web/dmengine_release.js
++# copy js-web/dmengine_release.js.mem js-web/dmengine_release.js.mem
++copy wasm-web/dmengine.js wasm-web/dmengine.js
++copy wasm-web/dmengine.wasm wasm-web/dmengine.wasm
++copy wasm-web/dmengine_release.js wasm-web/dmengine_release.js
++copy wasm-web/dmengine_release.wasm wasm-web/dmengine_release.wasm
++
++if [ -e "${DIR}/copy_private.sh" ]; then
++    sh ${DIR}/copy_private.sh
++fi
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
+index b215f403bb..3785dc5b99 100644
+--- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
++++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
+@@ -771,7 +771,7 @@ public class Bob {
+         try {
+             TimeProfiler.start("ParseCommandLine");
+             if (cmd.hasOption("version")) {
+-                System.out.println(String.format("bob.jar version: %s  sha1: %s  built: %s", EngineVersion.version, EngineVersion.sha1, EngineVersion.timestamp));
++                System.out.println(String.format("<!> bob.jar version: %s  sha1: %s  built: %s", EngineVersion.version, EngineVersion.sha1, EngineVersion.timestamp));
+                 return new InvocationResult(true, Collections.emptyList());
+             }
+ 
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
+index e54b20a03e..6859214c6a 100644
+--- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
++++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
+@@ -35,6 +35,8 @@ public class ShaderCompilers {
+             ArrayList<ShaderDesc.Language> shaderLanguages = new ArrayList<>();
+             boolean spirvSupported = true;
+ 
++            System.out.println("<!> getPlatformShaderLanguages");
++
+             switch(platform) {
+                 case Arm64MacOS:
+                 case X86_64MacOS: {
+@@ -52,6 +54,11 @@ public class ShaderCompilers {
+                     } else {
+                         shaderLanguages.add(ShaderDesc.Language.LANGUAGE_GLSL_SM140);
+                     }
++                    if (shaderType != ShaderDesc.ShaderType.SHADER_TYPE_COMPUTE) {
++                        System.out.println("<!> Adding GLES shaders");
++                        shaderLanguages.add(ShaderDesc.Language.LANGUAGE_GLES_SM300);
++                        shaderLanguages.add(ShaderDesc.Language.LANGUAGE_GLES_SM100);
++                    }
+                 } break;
+                 case Arm64Ios:
+                 case X86_64Ios: {
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
+index 2961981be6..a7782db053 100644
+--- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
++++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderProgramBuilder.java
+@@ -140,6 +140,8 @@ public abstract class ShaderProgramBuilder extends Builder {
+             throw new CompileExceptionError("Unknown platform for shader program '" + resourceOutputPath + "'': " + platform);
+         }
+ 
++        System.out.println("<!> Making shader desc for " + resourceOutputPath + " with platform " + platform);
++
+         String finalShaderSource                 = shaderPreprocessor.getCompiledSource();
+         IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
+         ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
+diff --git a/engine/graphics/src/graphics.cpp b/engine/graphics/src/graphics.cpp
+index 4da4697d56..1492eab368 100644
+--- a/engine/graphics/src/graphics.cpp
++++ b/engine/graphics/src/graphics.cpp
+@@ -304,9 +304,11 @@ namespace dmGraphics
+         assert(shader_desc);
+         ShaderDesc::Shader* selected_shader = 0x0;
+ 
++        dmLogInfo("<!> GetShaderProgram: shader_desc->m_Shaders.m_Count: %d", shader_desc->m_Shaders.m_Count);
+         for(uint32_t i = 0; i < shader_desc->m_Shaders.m_Count; ++i)
+         {
+             ShaderDesc::Shader* shader = &shader_desc->m_Shaders.m_Data[i];
++            dmLogInfo("<!> GetShaderProgram: shader->m_Language: %d, shader_desc->m_ShaderType: %d", shader->m_Language, shader_desc->m_ShaderType);
+             if(IsShaderLanguageSupported(context, shader->m_Language, shader_desc->m_ShaderType))
+             {
+                 if (shader->m_VariantTextureArray)
 diff --git a/engine/sound/src/devices/device_js.cpp b/engine/sound/src/devices/device_js.cpp
-index 22dbc6e5cc..faa19bbf1f 100644
+index 22dbc6e5cc..606e039c38 100644
 --- a/engine/sound/src/devices/device_js.cpp
 +++ b/engine/sound/src/devices/device_js.cpp
 @@ -87,6 +87,7 @@ namespace dmDeviceJS
          assert(info);
          JSDevice *dev = (JSDevice*) device;
          info->m_MixRate = dmGetDeviceSampleRate(dev->devId);
-+        info->m_FrameCount = info->m_MixRate * 0.022;
++        info->m_FrameCount = info->m_MixRate * 0.025;
      }
  
      void DeviceJSStart(dmSound::HDevice device)
@@ -82,9 +300,18 @@ index fe7734fa31..37bc8b0e6f 100644
                      // use real buffer length next time.
                      this.bufferDuration = len;
 diff --git a/scripts/build.py b/scripts/build.py
-index 81004793eb..42cd4dc966 100755
+index 81004793eb..47f0f0c687 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
+@@ -35,7 +35,7 @@ from threading import Thread, Event
+ from queue import Queue
+ from configparser import ConfigParser
+ 
+-BASE_PLATFORMS = [  'x86_64-linux', #'arm64-linux',
++BASE_PLATFORMS = [  'x86_64-linux', 'arm64-linux',
+                     'x86_64-macos', 'arm64-macos',
+                     'win32', 'x86_64-win32',
+                     'x86_64-ios', 'arm64-ios',
 @@ -1368,9 +1368,12 @@ class Configuration(object):
          test_dir = join(self.defold_root, 'com.dynamo.cr/com.dynamo.cr.bob.test')
  
