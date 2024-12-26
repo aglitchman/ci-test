@@ -81,8 +81,8 @@ jobs:
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           sudo apt update
           sudo apt install --no-install-recommends -y crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
-          sudo apt install -y libwayland-dev:arm64 libxkbcommon-dev:arm64 xorg-dev:arm64
 
+      # sudo apt install -y libwayland-dev:arm64 libxkbcommon-dev:arm64 xorg-dev:arm64
       # - name: Build GLFW
       #   if: matrix.platform == 'arm64-linux'
       #   run: |
