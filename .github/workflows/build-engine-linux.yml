@@ -35,7 +35,10 @@ jobs:
           path: patches
 
       - name: Apply patches
-        run: git apply patches/all.patch
+        run: |
+          git apply patches/all.patch
+          cp patches/astcenc-a8ce191-arm64-linux.tar.gz packages/
+          cp patches/glfw-3.4-arm64-linux.tar.gz packages/
 
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
@@ -79,7 +82,22 @@ jobs:
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install --no-install-recommends crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
+          sudo apt install --no-install-recommends -y crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
+          sudo apt install -y libwayland-dev:arm64 libxkbcommon-dev:arm64 xorg-dev:arm64
+
+      # - name: Build GLFW
+      #   if: matrix.platform == 'arm64-linux'
+      #   run: |
+      #     cd share/ext/glfw
+      #     ./build_glfw.sh ${{ matrix.platform }}
+      #     cp glfw-3.4-arm64-linux.tar.gz ../../../packages/
+
+      # - name: Build ASTCENC
+      #   if: matrix.platform == 'arm64-linux'
+      #   run: |
+      #     cd share/ext/astcenc
+      #     ./build_astcenc.sh ${{ matrix.platform }}
+      #     cp astcenc-8b0aa01-arm64-linux.tar.gz ../../../packages/
 
       - name: Build
         if: matrix.platform == 'x86_64-linux'
