@@ -70,7 +70,7 @@ jobs:
       - run: |
           clang -v
           sudo apt remove -y clang*
-          sudo apt update && sudo apt install autoconf automake build-essential freeglut3-dev libssl-dev libtool libxi-dev libx11-xcb-dev libxrandr-dev libopenal-dev libgl1-mesa-dev libglw1-mesa-dev lib32z1 openssl tofrodos tree valgrind uuid-dev xvf
+          sudo apt update && sudo apt install autoconf automake build-essential freeglut3-dev libssl-dev libtool libxi-dev libx11-xcb-dev libxrandr-dev libopenal-dev libgl1-mesa-dev libglw1-mesa-dev lib32z1 openssl tofrodos tree valgrind uuid-dev xvfb
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
