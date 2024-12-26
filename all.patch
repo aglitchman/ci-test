@@ -14,9 +14,18 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/ci/ci.py b/ci/ci.py
-index 98edb0c7bd..bd4e13a95f 100644
+index 98edb0c7bd..fe88f9f173 100644
 --- a/ci/ci.py
 +++ b/ci/ci.py
+@@ -203,7 +203,7 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
+ 
+     install_sdk = 'install_sdk'
+     # for some platforms, we use the locally installed platform sdk
+-    if platform in ('x86_64-macos', 'arm64-macos', 'arm64-ios', 'x86_64-ios', 'js-web', 'wasm-web'):
++    if platform in ('arm64-linux', 'x86_64-linux', 'x86_64-macos', 'arm64-macos', 'arm64-ios', 'x86_64-ios', 'js-web', 'wasm-web'):
+         install_sdk = ''
+ 
+     args = ('python scripts/build.py distclean %s install_ext check_sdk' % install_sdk).split()
 @@ -243,8 +243,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
      if with_vanilla_lua:
          waf_opts.append('--use-vanilla-lua')
@@ -300,7 +309,7 @@ index fe7734fa31..37bc8b0e6f 100644
                      // use real buffer length next time.
                      this.bufferDuration = len;
 diff --git a/scripts/build.py b/scripts/build.py
-index 81004793eb..47f0f0c687 100755
+index 81004793eb..0caf876c51 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
 @@ -35,7 +35,7 @@ from threading import Thread, Event
@@ -312,7 +321,17 @@ index 81004793eb..47f0f0c687 100755
                      'x86_64-macos', 'arm64-macos',
                      'win32', 'x86_64-win32',
                      'x86_64-ios', 'arm64-ios',
-@@ -1368,9 +1368,12 @@ class Configuration(object):
+@@ -1010,6 +1010,9 @@ class Configuration(object):
+         if self.target_platform in ('x86_64-macos','arm64-macos','arm64-ios','x86_64-ios') and 'linux' == sys.platform:
+             strip = os.path.join(sdkfolder, 'linux', sdk.PACKAGES_LINUX_CLANG, 'bin', 'x86_64-apple-darwin19-strip')
+ 
++        if self.target_platform == 'arm64-linux' and self.host == 'x86_64-linux':
++            strip = '/usr/bin/aarch64-linux-gnu-strip'
++
+         run.shell_command("%s %s" % (strip, path))
+         return True
+ 
+@@ -1368,9 +1371,12 @@ class Configuration(object):
          test_dir = join(self.defold_root, 'com.dynamo.cr/com.dynamo.cr.bob.test')
  
          sha1 = self._git_sha1()
@@ -325,7 +344,7 @@ index 81004793eb..47f0f0c687 100755
              self.copy_local_bob_artefacts()
  
          env = self._form_env()
-@@ -2136,8 +2139,17 @@ class Configuration(object):
+@@ -2136,8 +2142,17 @@ class Configuration(object):
  
  
      def upload_to_archive(self, src_file, dst_path):
