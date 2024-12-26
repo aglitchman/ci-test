@@ -13,6 +13,23 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_TOOLCHAIN=f"Microsoft-Visual-Studio-2022-{VERSION_WINDOWS_MSVC_2022}"
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
+diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
+index 5c9e4a517b..5e52653972 100644
+--- a/build_tools/waf_dynamo.py
++++ b/build_tools/waf_dynamo.py
+@@ -1881,8 +1881,11 @@ def detect(conf):
+         conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
+     elif platform in ('win32', 'x86_64-win32'):
+         conf.env['LINKFLAGS_OPENGL'] = ['opengl32.lib', 'glu32.lib']
+-    elif platform in ('x86_64-linux','arm64-linux'):
++    elif platform in ('x86_64-linux'):
+         conf.env['LIB_OPENGL'] = ['GL', 'GLU']
++    elif platform in ('arm64-linux'):
++        print("<!> build_tools: GLES LINKFLAGS")
++        conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
+ 
+     if platform in ('x86_64-macos','arm64-macos'):
+         conf.env['FRAMEWORK_OPENAL'] = ['OpenAL']
 diff --git a/ci/ci.py b/ci/ci.py
 index 98edb0c7bd..fe88f9f173 100644
 --- a/ci/ci.py
@@ -265,6 +282,23 @@ index 630385dfe9..1b201682de 100644
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
+diff --git a/engine/gamesys/wscript b/engine/gamesys/wscript
+index 1b00fcdd2d..4c5815a8ff 100644
+--- a/engine/gamesys/wscript
++++ b/engine/gamesys/wscript
+@@ -40,8 +40,11 @@ def configure(conf):
+         pass
+     elif re.match('arm.*?android', platform):
+         conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
+-    elif platform == "linux" or platform == "x86_64-linux":
++    elif platform == "x86_64-linux":
+         conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
++    elif platform == "arm64-linux":
++        print("<!> gamesys: GLES LINKFLAGS")
++        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
+     elif "win32" in platform:
+         conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
+ 
 diff --git a/engine/graphics/src/graphics.cpp b/engine/graphics/src/graphics.cpp
 index 4da4697d56..1492eab368 100644
 --- a/engine/graphics/src/graphics.cpp
@@ -282,7 +316,7 @@ index 4da4697d56..1492eab368 100644
              {
                  if (shader->m_VariantTextureArray)
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index c94b3374a2..cccefb8155 100644
+index c94b3374a2..63faad70d2 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
 @@ -65,14 +65,18 @@
@@ -301,7 +335,7 @@ index c94b3374a2..cccefb8155 100644
  
  #if defined(__linux__) && !defined(ANDROID)
 -    #include <GL/glext.h>
-+    // #if defined(__arm__)
++    // #if defined(__arm64__)
 +    //     #include <GLES/glext.h>
 +    // #else
 +    //     #include <GL/glext.h>
@@ -546,7 +580,7 @@ index c94b3374a2..cccefb8155 100644
          context->m_PipelineState  = GetDefaultPipelineState();
  
 -#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(_WIN32)
++#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(_WIN32) || (defined(__linux__) && defined(__arm64__))
          context->m_IsShaderLanguageGles = 1;
  
          const char* version = (char *) glGetString(GL_VERSION);
@@ -568,14 +602,14 @@ index c94b3374a2..cccefb8155 100644
          {
              if (context->m_IsGles3Version)
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
-index fce50794ba..b9fe2e820c 100644
+index fce50794ba..e29072f596 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
 +++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
 @@ -17,10 +17,17 @@
  
  #if defined(__linux__) && !defined(ANDROID)
  
-+#if defined(__arm__)
++#if defined(__arm64__)
 +#define GL_GLEXT_PROTOTYPES
 +#include <GLES2/gl2.h>
 +#include <GLES2/gl2ext.h>
@@ -635,6 +669,23 @@ index 3b8d2ca070..531d311f79 100644
  
      conf.env.append_value('INCLUDES', "../src")
      conf.env.append_value('INCLUDES', os.path.join(dynamo_ext, "include"))
+diff --git a/engine/gui/wscript b/engine/gui/wscript
+index bd80fa2574..e18c5f8494 100644
+--- a/engine/gui/wscript
++++ b/engine/gui/wscript
+@@ -46,8 +46,11 @@ def configure(conf):
+         conf.env.append_value('LINKFLAGS', ['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'AGL', '-framework', 'IOKit', '-framework', 'CoreVideo'])
+     if platform in ("arm64-ios",'x86_64-ios'):
+         conf.env.append_value('LINKFLAGS', ['-framework', 'UIKit', '-framework', 'OpenGLES', '-framework', 'QuartzCore', '-framework', 'CoreGraphics'])
+-    if platform in ("x86_64-linux",):
++    if platform in ("x86_64-linux"):
+         conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
++    if platform in ("arm64-linux"):
++        print("<!> graphics/gui: GLES LINKFLAGS")
++        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
+     if 'win32' in platform:
+         conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
+ 
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
 index 49fa153ad9..16db3e1f03 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
@@ -747,7 +798,7 @@ index fe7734fa31..37bc8b0e6f 100644
                      // use real buffer length next time.
                      this.bufferDuration = len;
 diff --git a/engine/tools/wscript b/engine/tools/wscript
-index 960fb697a9..926da0ffb2 100755
+index 960fb697a9..8a8a3fa7ed 100755
 --- a/engine/tools/wscript
 +++ b/engine/tools/wscript
 @@ -45,10 +45,17 @@ def configure(conf):
@@ -759,7 +810,7 @@ index 960fb697a9..926da0ffb2 100755
          conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
 +    elif platform == 'arm64-linux':
 +        print("<!> graphics/tools: GLES LINKFLAGS")
-+        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GLESv1_CM', 'GLESv2']
++        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
      elif "win32" in platform:
 -        conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
 +        conf.env.append_value('LINKFLAGS', ['user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
