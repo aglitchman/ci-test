@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: ${{env.BUILD_BRANCH}}
+          ref: 7543cd69b8815e762e5a8fb39c3762a734ae5b23
 
       - name: Checkout patches
         uses: actions/checkout@v4
