@@ -316,7 +316,7 @@ index 4da4697d56..1492eab368 100644
              {
                  if (shader->m_VariantTextureArray)
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index c94b3374a2..63faad70d2 100644
+index c94b3374a2..a637a2e1c2 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
 @@ -65,14 +65,18 @@
@@ -580,7 +580,7 @@ index c94b3374a2..63faad70d2 100644
          context->m_PipelineState  = GetDefaultPipelineState();
  
 -#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(_WIN32) || (defined(__linux__) && defined(__arm64__))
++#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(_WIN32) || (defined(__linux__) && defined(__aarch64__))
          context->m_IsShaderLanguageGles = 1;
  
          const char* version = (char *) glGetString(GL_VERSION);
@@ -589,7 +589,7 @@ index c94b3374a2..63faad70d2 100644
          }
  
 -#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__)
-+#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__) || defined(_WIN32)
++#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__) || defined(_WIN32) || (defined(__linux__) && defined(__aarch64__))
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
@@ -602,16 +602,16 @@ index c94b3374a2..63faad70d2 100644
          {
              if (context->m_IsGles3Version)
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
-index fce50794ba..e29072f596 100644
+index fce50794ba..93ca6cb781 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
 +++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
 @@ -17,10 +17,17 @@
  
  #if defined(__linux__) && !defined(ANDROID)
  
-+#if defined(__arm64__)
++#if defined(__aarch64__)
 +#define GL_GLEXT_PROTOTYPES
-+#include <GLES2/gl2.h>
++#include <GLES3/gl3.h>
 +#include <GLES2/gl2ext.h>
 +#define GL_BGRA GL_BGRA_EXT
 +#else
@@ -646,7 +646,7 @@ index fce50794ba..e29072f596 100644
  #elif defined (ANDROID)
  #define GL_GLEXT_PROTOTYPES
 diff --git a/engine/graphics/wscript b/engine/graphics/wscript
-index 3b8d2ca070..531d311f79 100644
+index 3b8d2ca070..45e9e950af 100644
 --- a/engine/graphics/wscript
 +++ b/engine/graphics/wscript
 @@ -52,10 +52,17 @@ def configure(conf):
@@ -658,7 +658,7 @@ index 3b8d2ca070..531d311f79 100644
          conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lGL', '-lGLU', '-lpthread'])
 +    elif platform == "arm64-linux":
 +        print("<!> graphics: GLES LINKFLAGS")
-+        conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lGLESv1_CM', '-lGLESv2', '-lpthread'])
++        conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lEGL', '-lGLESv1_CM', '-lGLESv2', '-lpthread'])
      elif "win32" in platform:
 -        conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
 +        print("<!> graphics: ANGLE LIBPATH AND INCLUDES")
