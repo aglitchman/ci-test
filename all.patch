@@ -687,7 +687,7 @@ index bd80fa2574..e18c5f8494 100644
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..005ff7cb7e 100644
+index 673399f73f..b688b690e0 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -181,36 +181,6 @@ namespace dmPlatform
@@ -734,8 +734,8 @@ index 673399f73f..005ff7cb7e 100644
 -        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
 +        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 +
-+        const int[] supported_versions = { 3, 2, 3, 1, 3, 0, 2, 0 };
-+        const int[] creation_api = { GLFW_EGL_CONTEXT_API, GLFW_NATIVE_CONTEXT_API };
++        const int supported_versions[] = { 3, 2, 3, 1, 3, 0, 2, 0 };
++        const int creation_api[] = { GLFW_EGL_CONTEXT_API, GLFW_NATIVE_CONTEXT_API };
 +
 +        for (int j = 0; j < sizeof(creation_api) / sizeof(creation_api[0]) && !wnd->m_Window; j++) {
 +            const int api = creation_api[j];
