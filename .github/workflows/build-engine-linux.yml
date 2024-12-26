@@ -77,6 +77,9 @@ jobs:
         with:
           version: 16.0.0
 
+      - run: |
+          clang -v
+
       - name: Build
         if: matrix.platform == 'x86_64-linux'
         run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-tests --skip-build-tests engine
