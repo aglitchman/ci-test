@@ -49,11 +49,11 @@ jobs:
       - name: Download archives
         uses: actions/download-artifact@v4
         with:
-          name: tmp
+          name: defold-x86_64-linux
           path: tmp/dynamo_home
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Linux x86_64 run id
-          run-id: 12423335341
+          run-id: 12515245458
 
       - name: List Dynamo home
         run: ls -R tmp/dynamo_home
