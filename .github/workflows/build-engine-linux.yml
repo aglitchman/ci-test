@@ -16,8 +16,8 @@ env:
   BUILD_REF: 04f21d84f5acd3e9bfae06121729afb2a4c69ab0
 
 jobs:
-  bld-eng-linux-64:
-    runs-on: ubuntu-22.04
+  bld-eng-linux:
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         platform: [x86_64-linux, arm64-linux]
@@ -77,9 +77,9 @@ jobs:
         run: |
           sudo dpkg --add-architecture arm64
           sudo sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
           sudo apt update
           sudo apt install --no-install-recommends -y crossbuild-essential-arm64 binutils-aarch64-linux-gnu libc6-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libxcb-xkb-dev:arm64 libglu1-mesa-dev:arm64 libgl1-mesa-dev:arm64 mesa-common-dev:arm64 libopenal-dev:arm64
 
