@@ -687,7 +687,7 @@ index bd80fa2574..e18c5f8494 100644
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..9e71ea0054 100644
+index 673399f73f..6e57280fd8 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -739,48 +739,19 @@ index 673399f73f..9e71ea0054 100644
          // Reset context
          memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
  
-@@ -181,36 +193,6 @@ namespace dmPlatform
+@@ -181,6 +193,34 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
--        uint32_t major = 3, minor = 3;
--        if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
--        {
--            dmLogWarning("OpenGL version hint %d is not supported. Using default version (%d.%d)",
--                params.m_OpenGLVersionHint, major, minor);
--        }
--
--        bool use_highest_version = major == 0 && minor == 0;
--        if (!use_highest_version)
--        {
--            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
--            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
--        }
--
--        if (params.m_OpenGLUseCoreProfileHint)
--        {
--            bool can_set_profile_and_fc = true;
--
--        #ifdef _WIN32
--            // Not supported on windows when requesting the default OpenGL version (which will equate to the highest available)
--            can_set_profile_and_fc = !use_highest_version;
--        #endif
--
--            if (can_set_profile_and_fc)
--            {
--                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
--                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
--            }
--        }
--
-         glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
- 
-         GLFWmonitor* fullscreen_monitor = NULL;
-@@ -219,7 +201,24 @@ namespace dmPlatform
-             fullscreen_monitor = glfwGetPrimaryMonitor();
-         }
- 
--        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
++    #if defined(__linux__) && !defined(ANDROID) && defined(__aarch64__)
++        glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
++
++        GLFWmonitor* fullscreen_monitor = NULL;
++        if (params.m_Fullscreen)
++        {
++            fullscreen_monitor = glfwGetPrimaryMonitor();
++        }
++
 +        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 +
 +        const int supported_versions[] = { 3, 2, 3, 1, 3, 0, 2, 0 };
@@ -799,6 +770,15 @@ index 673399f73f..9e71ea0054 100644
 +                wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
 +            }
 +        }
++    #else
+         uint32_t major = 3, minor = 3;
+         if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
+         {
+@@ -220,6 +260,7 @@ namespace dmPlatform
+         }
+ 
+         wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
++    #endif
  
          if (!wnd->m_Window)
          {

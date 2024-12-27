@@ -13,21 +13,20 @@ on:
 
 env:
   DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
-  BUILD_BRANCH: 1.9.6
+  BUILD_REF: 04f21d84f5acd3e9bfae06121729afb2a4c69ab0
 
 jobs:
   bld-eng-linux-64:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        platform: [arm64-linux]
-        #x86_64-linux, arm64-linux
+        platform: [x86_64-linux, arm64-linux]
     steps:
       - name: Checkout Defold
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: 04f21d84f5acd3e9bfae06121729afb2a4c69ab0
+          ref: ${{ env.BUILD_REF }}
 
       - name: Checkout patches
         uses: actions/checkout@v4
