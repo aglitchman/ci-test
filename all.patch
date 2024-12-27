@@ -872,7 +872,7 @@ index 0000000000..94e4956363
 +cp packages/glfw-3.4-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
 +cp packages/astcenc-a8ce191-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
 diff --git a/scripts/build.py b/scripts/build.py
-index ccaa10a75a..69552fa12d 100755
+index ccaa10a75a..69c7c55a35 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
 @@ -35,7 +35,7 @@ from threading import Thread, Event
@@ -889,7 +889,7 @@ index ccaa10a75a..69552fa12d 100755
  PACKAGES_WIN32_64="protobuf-3.20.1 luajit-2.1.0-04dca79 glut-3.7.6 sassc-5472db213ec223a67482df2226622be372921847 bullet-2.77 glslang-42d9adf5 spirv-cross-9040e0d2 spirv-tools-d24a39a7 vulkan-1.3.261.1 lipo-9ffdea2 glfw-3.4 tint-22b958 astcenc-8b0aa01".split()
  PACKAGES_LINUX_X86_64="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-ba5c010c spirv-cross-9040e0d2 spirv-tools-d24a39a7 vulkan-1.1.108  tremolo-b0cb4d1 lipo-9ffdea2 glfw-3.4 tint-22b958 sassc-5472db213ec223a67482df2226622be372921847 astcenc-8b0aa01".split()
 -PACKAGES_LINUX_ARM64 ="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-2fed4fc0 spirv-cross-9040e0d2 spirv-tools-4fab7435 vulkan-v1.3.299 tremolo-b0cb4d1 lipo-abb8ab1 glfw-3.4".split() # vulkan-1.1.108  tint-22b958".split()
-+PACKAGES_LINUX_ARM64 ="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-2fed4fc0 spirv-cross-9040e0d2 spirv-tools-4fab7435 vulkan-v1.3.299 tremolo-b0cb4d1 lipo-abb8ab1 glfw-3.4 astcenc-a8ce191".split() # vulkan-1.1.108  tint-22b958".split()
++PACKAGES_LINUX_ARM64 ="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-2fed4fc0 spirv-cross-9040e0d2 spirv-tools-4fab7435 vulkan-v1.3.299 tremolo-b0cb4d1 lipo-abb8ab1 glfw-3.4 astcenc-8b0aa01".split() # vulkan-1.1.108  tint-22b958".split()
  PACKAGES_ANDROID="protobuf-3.20.1 android-support-multidex androidx-multidex luajit-2.1.0-04dca79 tremolo-b0cb4d1 bullet-2.77 glfw-2.7.1".split()
  PACKAGES_ANDROID.append(sdk.ANDROID_PACKAGE)
  PACKAGES_ANDROID_64="protobuf-3.20.1 android-support-multidex androidx-multidex luajit-2.1.0-04dca79 tremolo-b0cb4d1 bullet-2.77 glfw-2.7.1".split()
@@ -936,36 +936,39 @@ index ccaa10a75a..69552fa12d 100755
  
  
      def download_from_s3(self, path, url):
-diff --git a/share/ext/astcenc/arm64-linux.cmake b/share/ext/astcenc/arm64-linux.cmake
-new file mode 100644
-index 0000000000..e782584d29
---- /dev/null
-+++ b/share/ext/astcenc/arm64-linux.cmake
-@@ -0,0 +1,7 @@
-+set(CMAKE_SYSTEM_NAME    Linux)
-+set(CMAKE_SYSTEM_PROCESSOR aarch64)
-+set(CMAKE_C_COMPILER     "aarch64-linux-gnu-gcc")
-+set(CMAKE_CXX_COMPILER   "aarch64-linux-gnu-g++")
-+set(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)
-+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE arm64)
 diff --git a/share/ext/astcenc/build_astcenc.sh b/share/ext/astcenc/build_astcenc.sh
-index bcc3917d1b..8a981fdb3e 100755
+index bcc3917d1b..fd776f89a5 100755
 --- a/share/ext/astcenc/build_astcenc.sh
 +++ b/share/ext/astcenc/build_astcenc.sh
-@@ -45,6 +45,11 @@ case $PLATFORM in
+@@ -19,6 +19,7 @@
+ PLATFORM=$1
+ PWD=$(pwd)
+ SOURCE_DIR=${PWD}/source
++SHA1=8b0aa018558028b6475a83463e29d4b8cf27de8f
+ BUILD_DIR=${PWD}/build/${PLATFORM}
+ 
+ . ../common.sh
+@@ -45,6 +46,11 @@ case $PLATFORM in
          CMAKE_FLAGS="-DCMAKE_OSX_ARCHITECTURES=x86_64 ${CMAKE_FLAGS}"
          CMAKE_FLAGS="-DCMAKE_OSX_DEPLOYMENT_TARGET=${OSX_MIN_SDK_VERSION} ${CMAKE_FLAGS}"
          ;;
 +    arm64-linux)
-+        CMAKE_FLAGS="-DCMAKE_TOOLCHAIN_FILE=${PWD}/arm64-linux.cmake -DARCH=aarch64 -DASTCENC_ISA_NEON=ON ${CMAKE_FLAGS}"
++        CMAKE_FLAGS="-DARCH=aarch64 -DASTCENC_ISA_NEON=ON ${CMAKE_FLAGS}"
 +        # Need to setup clang on linux
 +        cmi_setup_cc $PLATFORM
 +        ;;
      x86_64-linux)
          # Need to setup clang on linux
          cmi_setup_cc $PLATFORM
-@@ -83,6 +88,9 @@ case $PLATFORM in
+@@ -64,6 +70,7 @@ esac
+ # Follow the build instructions on https://github.com/ARM-software/astc-encoder
+ if [ ! -d "$SOURCE_DIR" ]; then
+     git clone https://github.com/ARM-software/astc-encoder.git $SOURCE_DIR
++    (cd $SOURCE_DIR && git reset --hard $SHA1)
+ fi
+ 
+ mkdir -p ${BUILD_DIR}
+@@ -83,6 +90,9 @@ case $PLATFORM in
      x86_64-macos)
          LIB_NAME=libastcenc-sse4.1-static.a
          ;;
@@ -975,6 +978,26 @@ index bcc3917d1b..8a981fdb3e 100755
      x86_64-linux)
          LIB_NAME=libastcenc-native-static.a
          ;;
+diff --git a/share/ext/common.sh b/share/ext/common.sh
+index 998fb7501b..5028b10192 100755
+--- a/share/ext/common.sh
++++ b/share/ext/common.sh
+@@ -384,10 +384,11 @@ function cmi_setup_cc() {
+             export CXXFLAGS="${CXXFLAGS} --target=aarch64-unknown-linux-gnu -fPIC"
+             export CPPFLAGS="${CPPFLAGS} --target=aarch64-unknown-linux-gnu -fPIC"
+ 
+-            export CC=$(which clang)
+-            export CXX=$(which clang++)
+-            export AR=$(which ar)
+-            export RANLIB=$(which ranlib)
++            echo "A"
++            export CC=/home/linux/defold-engine/tmp/dynamo_home/ext/SDKs/x86_64-linux/clang-16.0.0/bin/clang
++            export CXX=/home/linux/defold-engine/tmp/dynamo_home/ext/SDKs/x86_64-linux/clang-16.0.0/bin/clang++
++            export AR=/home/linux/defold-engine/tmp/dynamo_home/ext/SDKs/x86_64-linux/clang-16.0.0/bin/ar
++            export RANLIB=/home/linux/defold-engine/tmp/dynamo_home/ext/SDKs/x86_64-linux/clang-16.0.0/bin/ranlib
+             export CPP="${CC} -E"
+             ;;
+ 
 diff --git a/share/ext/glfw/arm64-linux.cmake b/share/ext/glfw/arm64-linux.cmake
 new file mode 100644
 index 0000000000..e782584d29
@@ -989,15 +1012,16 @@ index 0000000000..e782584d29
 +set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 +set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE arm64)
 diff --git a/share/ext/glfw/build_glfw.sh b/share/ext/glfw/build_glfw.sh
-index e019f0634b..8b21e57718 100755
+index e019f0634b..76fed11ce8 100755
 --- a/share/ext/glfw/build_glfw.sh
 +++ b/share/ext/glfw/build_glfw.sh
-@@ -69,6 +69,9 @@ case $PLATFORM in
+@@ -69,6 +69,10 @@ case $PLATFORM in
      x86_64-macos)
          CMAKE_FLAGS="-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=${OSX_MIN_SDK_VERSION} ${CMAKE_FLAGS}"
          ;;
 +    arm64-linux)
-+        CMAKE_FLAGS="-DCMAKE_TOOLCHAIN_FILE=${PWD}/arm64-linux.cmake ${CMAKE_FLAGS}"
++        # Need to setup clang on linux
++        cmi_setup_cc $PLATFORM
 +        ;;
  esac
  
