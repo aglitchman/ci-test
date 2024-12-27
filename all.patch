@@ -265,6 +265,27 @@ index eb2ef1ae25..2709d6aee5 100644
          String finalShaderSource                 = shaderPreprocessor.getCompiledSource();
          IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
          ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
+diff --git a/engine/dlib/src/dlib/job_thread.cpp b/engine/dlib/src/dlib/job_thread.cpp
+index 887a9975ad..45df1b802d 100644
+--- a/engine/dlib/src/dlib/job_thread.cpp
++++ b/engine/dlib/src/dlib/job_thread.cpp
+@@ -131,6 +131,7 @@ HContext Create(const JobThreadCreationParams& create_params)
+ {
+     JobContext* context = new JobContext;
+ #if defined(DM_HAS_THREADS)
++    dmLogInfo("<!> Creating job thread");
+     context->m_ThreadContext.m_Mutex = dmMutex::New();
+     context->m_ThreadContext.m_WakeupCond = dmConditionVariable::New();
+     context->m_ThreadContext.m_Run = true;
+@@ -145,6 +146,8 @@ HContext Create(const JobThreadCreationParams& create_params)
+         dmSnPrintf(name_buf, sizeof(name_buf), "%s_%d", create_params.m_ThreadNames[i], i);
+         context->m_Threads[i] = dmThread::New(JobThread, 0x80000, (void*)&context->m_ThreadContext, name_buf);
+     }
++#else
++    dmLogInfo("<!> NO JOB THREAD");
+ #endif
+     return context;
+ }
 diff --git a/engine/engine/wscript b/engine/engine/wscript
 index e002b73190..8df493de05 100644
 --- a/engine/engine/wscript
@@ -686,6 +707,27 @@ index bd80fa2574..e18c5f8494 100644
      if 'win32' in platform:
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'glu32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib'])
  
+diff --git a/engine/hid/src/native/hid_gamepad_driver_glfw.cpp b/engine/hid/src/native/hid_gamepad_driver_glfw.cpp
+index 3338d746ad..b7c3d32a3d 100644
+--- a/engine/hid/src/native/hid_gamepad_driver_glfw.cpp
++++ b/engine/hid/src/native/hid_gamepad_driver_glfw.cpp
+@@ -355,6 +355,7 @@ namespace dmHID
+     static void GetGamepadDeviceNameInternal(HContext context, int glfw_id, char name[MAX_GAMEPAD_NAME_LENGTH])
+     {
+         const char* device_name = dmPlatform::GetJoystickDeviceName(context->m_Window, glfw_id);
++        dmLogInfo("<!> GetGamepadDeviceNameInternal: %s", device_name);
+         dmStrlCpy(name, device_name, MAX_GAMEPAD_NAME_LENGTH);
+     }
+ 
+@@ -385,6 +386,8 @@ namespace dmHID
+ 
+     GamepadDriver* CreateGamepadDriverGLFW(HContext context)
+     {
++        dmLogInfo("<!> CreateGamepadDriverGLFW");
++
+         GLFWGamepadDriver* driver = new GLFWGamepadDriver();
+ 
+         driver->m_Initialize           = GLFWGamepadDriverInitialize;
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
 index 673399f73f..6e57280fd8 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
