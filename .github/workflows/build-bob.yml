@@ -26,7 +26,10 @@ jobs:
           path: patches
 
       - name: Apply patches
-        run: git apply patches/all.patch
+        run: |
+          git apply patches/all.patch
+          cp patches/astcenc-8b0aa01-arm64-linux.tar.gz packages/
+          cp patches/glfw-3.4-arm64-linux.tar.gz packages/
 
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
