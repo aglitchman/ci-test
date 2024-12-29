@@ -762,7 +762,7 @@ index 3338d746ad..a56ea9244e 100644
      }
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..c9a07bc957 100644
+index 673399f73f..3ba696731b 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -833,7 +833,7 @@ index 673399f73f..c9a07bc957 100644
 +        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 +        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 +
-+        dmLogInfo("<!> glfwCreateWindow with params: version %d.%d, w %d h %d title %s, api %d", major, minor, params.m_Width, params.m_Height, params.m_Title, api);
++        dmLogInfo("<!> glfwCreateWindow with params: w %d h %d title %s", params.m_Width, params.m_Height, params.m_Title);
 +        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
 +    #else
          uint32_t major = 3, minor = 3;
