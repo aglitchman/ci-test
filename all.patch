@@ -289,6 +289,45 @@ index 887a9975ad..45df1b802d 100644
  #endif
      return context;
  }
+diff --git a/engine/engine/content/builtins/input/default.gamepads b/engine/engine/content/builtins/input/default.gamepads
+index ae74602695..d57ae8d85b 100644
+--- a/engine/engine/content/builtins/input/default.gamepads
++++ b/engine/engine/content/builtins/input/default.gamepads
+@@ -5917,3 +5917,34 @@ driver {
+   map { input: GAMEPAD_GUIDE type: GAMEPAD_TYPE_BUTTON index: 12 }
+   map { input: GAMEPAD_RAW type: GAMEPAD_TYPE_AXIS index: 0 }
+ }
++
++driver
++{
++    device: "retrogame_joypad" # Linux handhelds internal controller name.
++    platform: "linux"
++    dead_zone: 0.2
++    map { input: GAMEPAD_LSTICK_LEFT type: GAMEPAD_TYPE_AXIS index: 0 mod { mod: GAMEPAD_MODIFIER_NEGATE } mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_LSTICK_RIGHT type: GAMEPAD_TYPE_AXIS index: 0 mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_LSTICK_DOWN type: GAMEPAD_TYPE_AXIS index: 1 mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_LSTICK_UP type: GAMEPAD_TYPE_AXIS index: 1 mod { mod: GAMEPAD_MODIFIER_NEGATE } mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_LSTICK_CLICK type: GAMEPAD_TYPE_BUTTON index: 11 }
++    map { input: GAMEPAD_RSTICK_LEFT type: GAMEPAD_TYPE_AXIS index: 2 mod { mod: GAMEPAD_MODIFIER_NEGATE } mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_RSTICK_RIGHT type: GAMEPAD_TYPE_AXIS index: 2 mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_RSTICK_DOWN type: GAMEPAD_TYPE_AXIS index: 3 mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_RSTICK_UP type: GAMEPAD_TYPE_AXIS index: 3 mod { mod: GAMEPAD_MODIFIER_NEGATE } mod { mod: GAMEPAD_MODIFIER_CLAMP } }
++    map { input: GAMEPAD_RSTICK_CLICK type: GAMEPAD_TYPE_BUTTON index: 12 }
++    map { input: GAMEPAD_LPAD_LEFT type: GAMEPAD_TYPE_BUTTON index: 15 }
++    map { input: GAMEPAD_LPAD_RIGHT type: GAMEPAD_TYPE_BUTTON index: 16 }
++    map { input: GAMEPAD_LPAD_DOWN type: GAMEPAD_TYPE_BUTTON index: 14 }
++    map { input: GAMEPAD_LPAD_UP type: GAMEPAD_TYPE_BUTTON index: 13 }
++    map { input: GAMEPAD_RPAD_LEFT type: GAMEPAD_TYPE_BUTTON index: 3 }
++    map { input: GAMEPAD_RPAD_RIGHT type: GAMEPAD_TYPE_BUTTON index: 1 }
++    map { input: GAMEPAD_RPAD_DOWN type: GAMEPAD_TYPE_BUTTON index: 0 }
++    map { input: GAMEPAD_RPAD_UP type: GAMEPAD_TYPE_BUTTON index: 2 }
++    map { input: GAMEPAD_LTRIGGER type: GAMEPAD_TYPE_BUTTON index: 6 }
++    map { input: GAMEPAD_LSHOULDER type: GAMEPAD_TYPE_BUTTON index: 4 }
++    map { input: GAMEPAD_RTRIGGER type: GAMEPAD_TYPE_BUTTON index: 7 }
++    map { input: GAMEPAD_RSHOULDER type: GAMEPAD_TYPE_BUTTON index: 5 }
++    map { input: GAMEPAD_START type: GAMEPAD_TYPE_BUTTON index: 9 }
++    map { input: GAMEPAD_BACK type: GAMEPAD_TYPE_BUTTON index: 8 }
++}
 diff --git a/engine/engine/wscript b/engine/engine/wscript
 index e002b73190..8df493de05 100644
 --- a/engine/engine/wscript
@@ -340,34 +379,19 @@ index 79e32f8bcb..773c8c4390 100644
              {
                  if (shader->m_VariantTextureArray)
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index 916e47abff..9fdb4fff0b 100644
+index 916e47abff..57beb73fcb 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
-@@ -65,14 +65,18 @@
-     #include <EGL/egl.h>
-     #include <GLES/gl.h>
- #else
--    #include <GL/gl.h>
--    #ifndef GLFW_NO_GLU
--        #include <GL/glu.h>
--    #endif
-+    // #include <GL/gl.h>
-+    // #ifndef GLFW_NO_GLU
-+    //     #include <GL/glu.h>
-+    // #endif
+@@ -72,7 +72,7 @@
  #endif
  
  #if defined(__linux__) && !defined(ANDROID)
 -    #include <GL/glext.h>
-+    // #if defined(__arm64__)
-+    //     #include <GLES/glext.h>
-+    // #else
-+    //     #include <GL/glext.h>
-+    // #endif
++    // NOP
  #elif defined (ANDROID)
      #define GL_GLEXT_PROTOTYPES
      #include <GLES2/gl2ext.h>
-@@ -84,124 +88,7 @@
+@@ -84,124 +84,7 @@
  #elif defined (__MACH__)
      // NOP
  #elif defined (_WIN32)
@@ -493,7 +517,7 @@ index 916e47abff..9fdb4fff0b 100644
  #elif defined(__EMSCRIPTEN__)
      #include <GL/glext.h>
      #if defined GL_ES_VERSION_2_0
-@@ -967,113 +854,10 @@ static void LogFrameBufferError(GLenum status)
+@@ -967,113 +850,10 @@ static void LogFrameBufferError(GLenum status)
          assert(_context);
          OpenGLContext* context = (OpenGLContext*) _context;
  
@@ -604,20 +628,19 @@ index 916e47abff..9fdb4fff0b 100644
          context->m_PipelineState  = GetDefaultPipelineState();
  
 -#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(_WIN32) || (defined(__linux__) && defined(__aarch64__))
++#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || (defined(__linux__) && defined(__aarch64__))
          context->m_IsShaderLanguageGles = 1;
  
          const char* version = (char *) glGetString(GL_VERSION);
-@@ -1443,7 +1227,7 @@ static void LogFrameBufferError(GLenum status)
-         #endif
+@@ -1444,6 +1224,7 @@ static void LogFrameBufferError(GLenum status)
          }
  
--#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__)
-+#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__) || defined(_WIN32) || (defined(__linux__) && defined(__aarch64__))
+ #if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__)
++        dmLogInfo("<!> test OpenGLIsExtensionSupported(context, \"GL_OES_element_index_uint\")");
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
-@@ -2918,6 +2702,7 @@ static void LogFrameBufferError(GLenum status)
+@@ -2918,6 +2699,7 @@ static void LogFrameBufferError(GLenum status)
      {
          OpenGLContext* context = (OpenGLContext*) _context;
  
@@ -723,7 +746,7 @@ index 3338d746ad..a56ea9244e 100644
      }
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..710a0acc17 100644
+index 673399f73f..70c875abb5 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -735,7 +758,7 @@ index 673399f73f..710a0acc17 100644
      }
  
      static void OnWindowResize(GLFWwindow* glfw_window, int width, int height)
-@@ -142,26 +142,34 @@ namespace dmPlatform
+@@ -142,26 +142,35 @@ namespace dmPlatform
  
      HWindow NewWindow()
      {
@@ -753,6 +776,7 @@ index 673399f73f..710a0acc17 100644
 +        if (glfwInit() == GL_FALSE)
 +        {
 +            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
++            glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
 +            if (glfwInit() == GL_FALSE)
 +            {
 +                dmLogError("Could not initialize glfw.");
@@ -775,7 +799,7 @@ index 673399f73f..710a0acc17 100644
          // Reset context
          memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
  
-@@ -181,6 +189,34 @@ namespace dmPlatform
+@@ -181,6 +190,34 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
@@ -810,7 +834,7 @@ index 673399f73f..710a0acc17 100644
          uint32_t major = 3, minor = 3;
          if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
          {
-@@ -211,15 +247,8 @@ namespace dmPlatform
+@@ -211,15 +248,8 @@ namespace dmPlatform
              }
          }
  
