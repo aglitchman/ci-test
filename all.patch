@@ -762,7 +762,7 @@ index 3338d746ad..a56ea9244e 100644
      }
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..19a98dd819 100644
+index 673399f73f..c9a07bc957 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -815,7 +815,7 @@ index 673399f73f..19a98dd819 100644
          // Reset context
          memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
  
-@@ -181,6 +190,34 @@ namespace dmPlatform
+@@ -181,6 +190,23 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
@@ -829,28 +829,17 @@ index 673399f73f..19a98dd819 100644
 +
 +    #if defined(__linux__) && defined(__aarch64__) && !defined(ANDROID)
 +        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
++        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
++        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
++        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 +
-+        const int supported_versions[] = { 2, 0 };
-+        const int creation_api[] = { GLFW_EGL_CONTEXT_API, GLFW_NATIVE_CONTEXT_API };
-+
-+        for (int j = 0; j < sizeof(creation_api) / sizeof(creation_api[0]) && !wnd->m_Window; j++) {
-+            const int api = creation_api[j];
-+            glfwWindowHint(GLFW_CONTEXT_CREATION_API, api);
-+            for (int i = 0; i < sizeof(supported_versions) / sizeof(supported_versions[0]) && !wnd->m_Window; i += 2) {
-+                const int major = supported_versions[i];
-+                const int minor = supported_versions[i + 1];
-+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
-+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
-+
-+                dmLogInfo("<!> glfwCreateWindow with params: version %d.%d, w %d h %d title %s, api %d", major, minor, params.m_Width, params.m_Height, params.m_Title, api);
-+                wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
-+            }
-+        }
++        dmLogInfo("<!> glfwCreateWindow with params: version %d.%d, w %d h %d title %s, api %d", major, minor, params.m_Width, params.m_Height, params.m_Title, api);
++        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
 +    #else
          uint32_t major = 3, minor = 3;
          if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
          {
-@@ -211,15 +248,8 @@ namespace dmPlatform
+@@ -211,15 +237,8 @@ namespace dmPlatform
              }
          }
  
