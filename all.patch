@@ -723,7 +723,7 @@ index 3338d746ad..a56ea9244e 100644
      }
  
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..70c875abb5 100644
+index 673399f73f..710a0acc17 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -735,7 +735,7 @@ index 673399f73f..70c875abb5 100644
      }
  
      static void OnWindowResize(GLFWwindow* glfw_window, int width, int height)
-@@ -142,26 +142,35 @@ namespace dmPlatform
+@@ -142,26 +142,34 @@ namespace dmPlatform
  
      HWindow NewWindow()
      {
@@ -753,7 +753,6 @@ index 673399f73f..70c875abb5 100644
 +        if (glfwInit() == GL_FALSE)
 +        {
 +            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-+            glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
 +            if (glfwInit() == GL_FALSE)
 +            {
 +                dmLogError("Could not initialize glfw.");
@@ -776,7 +775,7 @@ index 673399f73f..70c875abb5 100644
          // Reset context
          memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
  
-@@ -181,6 +190,34 @@ namespace dmPlatform
+@@ -181,6 +189,34 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
@@ -811,7 +810,7 @@ index 673399f73f..70c875abb5 100644
          uint32_t major = 3, minor = 3;
          if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
          {
-@@ -211,15 +248,8 @@ namespace dmPlatform
+@@ -211,15 +247,8 @@ namespace dmPlatform
              }
          }
  
