@@ -100,11 +100,11 @@ jobs:
 
       - name: Build
         if: matrix.platform == 'x86_64-linux'
-        run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-tests --skip-build-tests engine
+        run: ci/ci.sh --platform=${{ matrix.platform }} --archive engine
 
       - name: Build
         if: matrix.platform == 'arm64-linux'
-        run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
+        run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-builtins --skip-docs engine
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
