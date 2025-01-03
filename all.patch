@@ -269,18 +269,10 @@ index eb2ef1ae25..2709d6aee5 100644
          IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
          ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
 diff --git a/engine/dlib/src/dlib/job_thread.cpp b/engine/dlib/src/dlib/job_thread.cpp
-index 887a9975ad..45df1b802d 100644
+index 887a9975ad..3fb865ad08 100644
 --- a/engine/dlib/src/dlib/job_thread.cpp
 +++ b/engine/dlib/src/dlib/job_thread.cpp
-@@ -131,6 +131,7 @@ HContext Create(const JobThreadCreationParams& create_params)
- {
-     JobContext* context = new JobContext;
- #if defined(DM_HAS_THREADS)
-+    dmLogInfo("<!> Creating job thread");
-     context->m_ThreadContext.m_Mutex = dmMutex::New();
-     context->m_ThreadContext.m_WakeupCond = dmConditionVariable::New();
-     context->m_ThreadContext.m_Run = true;
-@@ -145,6 +146,8 @@ HContext Create(const JobThreadCreationParams& create_params)
+@@ -145,6 +145,8 @@ HContext Create(const JobThreadCreationParams& create_params)
          dmSnPrintf(name_buf, sizeof(name_buf), "%s_%d", create_params.m_ThreadNames[i], i);
          context->m_Threads[i] = dmThread::New(JobThread, 0x80000, (void*)&context->m_ThreadContext, name_buf);
      }
