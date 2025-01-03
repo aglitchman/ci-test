@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        platform: [x86_64-linux, arm64-linux]
+        platform: [arm64-linux]
+        # x86_64-linux, arm64-linux
     steps:
       - name: Checkout Defold
         uses: actions/checkout@v4
