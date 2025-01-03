@@ -14,10 +14,44 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
-index 4bd9ca09f7..a67e0255fc 100644
+index 4bd9ca09f7..b19fb68332 100644
 --- a/build_tools/waf_dynamo.py
 +++ b/build_tools/waf_dynamo.py
-@@ -1881,8 +1881,11 @@ def detect(conf):
+@@ -1596,7 +1596,7 @@ def detect(conf):
+         print ("Codesign disabled", Options.options.skip_codesign)
+ 
+     # Vulkan support
+-    if Options.options.with_vulkan and build_util.get_target_platform() in ('x86_64-ios','js-web','wasm-web'):
++    if Options.options.with_vulkan and build_util.get_target_platform() in ('arm64-linux', 'x86_64-ios', 'js-web', 'wasm-web'):
+         conf.fatal('Vulkan is unsupported on %s' % build_util.get_target_platform())
+ 
+     if 'win32' in platform:
+@@ -1713,8 +1713,12 @@ def detect(conf):
+ 
+     elif 'linux' == build_util.get_target_os():
+         bin_dir=os.path.join(sdk.get_toolchain_root(sdkinfo, build_util.get_target_platform()),'bin')
++        print("<!> detect: bin_dir1", bin_dir)
++        bin_dir=os.path.join(sdk.get_toolchain_root(sdkinfo, host_platform),'bin')
++        print("<!> detect: bin_dir2", bin_dir)
+ 
+         conf.find_program('clang', var='CLANG', mandatory = False, path_list=[bin_dir])
++        print("<!> detect: conf.env.CLANG", conf.env.CLANG)
+ 
+         if conf.env.CLANG:
+             conf.env['CC']      = '%s/clang' % bin_dir
+@@ -1773,9 +1777,11 @@ def detect(conf):
+         if not 'CLANG' in conf.env:
+             conf.find_program('clang',   var='CLANG', mandatory = True)
+             os.environ['CLANG'] = conf.env.CLANG[0]
++            print("<!> detect api gen: os.environ['CLANG']", os.environ['CLANG'])
+         if not 'CLANGPP' in conf.env:
+             conf.find_program('clang++', var='CLANGPP', mandatory = True)
+             os.environ['CLANGPP'] = conf.env.CLANGPP[0]
++            print("<!> detect api gen: os.environ['CLANGPP']", os.environ['CLANGPP'])
+ 
+     # NOTE: We override after check_tool. Otherwise waf gets confused and CXX_NAME etc are missing..
+     if platform in ('js-web', 'wasm-web'):
+@@ -1881,8 +1887,11 @@ def detect(conf):
          conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
      elif platform in ('win32', 'x86_64-win32'):
          conf.env['LINKFLAGS_OPENGL'] = ['opengl32.lib', 'glu32.lib']
@@ -25,7 +59,7 @@ index 4bd9ca09f7..a67e0255fc 100644
 +    elif platform in ('x86_64-linux'):
          conf.env['LIB_OPENGL'] = ['GL', 'GLU']
 +    elif platform in ('arm64-linux'):
-+        print("<!> build_tools: GLES LINKFLAGS")
++        print("<!> detect: GLES LINKFLAGS")
 +        conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
  
      if platform in ('x86_64-macos','arm64-macos'):
