@@ -489,6 +489,46 @@ index e002b73190..8df493de05 100644
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
+diff --git a/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw b/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
+index 20be336dcb..2e7895a1a6 100644
+--- a/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
++++ b/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
+@@ -26,7 +26,7 @@ function test_http_timeout()
+     options['timeout'] = 1.0
+ 
+     print("Failing http requests ahead ->")
+-    http.request("http://127.0.0.1:" .. PORT .. "/sleep/1.5", "GET",
++    http.request(ADDRESS .. "/sleep/1.5", "GET",
+         function(response)
+             assert(response.status == 0)
+             requests_left = requests_left - 1
+@@ -35,7 +35,7 @@ function test_http_timeout()
+     requests_left = requests_left + 1
+ 
+     -- The config file also specifies a timeout value, let's test that too
+-    http.request("http://127.0.0.1:" .. PORT .. "/sleep", "GET",
++    http.request(ADDRESS .. "/sleep", "GET",
+         function(response)
+             assert(response.status == 0)
+             requests_left = requests_left - 1
+@@ -44,7 +44,7 @@ function test_http_timeout()
+     requests_left = requests_left + 1
+ 
+     -- Also test one that succeeds, i.e. does not time out
+-    http.request("http://127.0.0.1:" .. PORT .. "/sleep/0.5", "GET",
++    http.request(ADDRESS .. "/sleep/0.5", "GET",
+         function(response)
+             assert(response.status == 200)
+             requests_left = requests_left - 1
+@@ -55,7 +55,7 @@ function test_http_timeout()
+     for i=1,10 do
+ 
+         options['timeout'] = 1.0
+-        http.request(string.format("http://127.0.0.1:" .. PORT .. "/sleep/1.10%d", i), "GET",
++        http.request(string.format(ADDRESS .. "/sleep/1.10%d", i), "GET",
+             function(response)
+                 assert(response.status == 0) -- it should timeout
+ 
 diff --git a/engine/gamesys/wscript b/engine/gamesys/wscript
 index ad03b4201c..82d91e6814 100644
 --- a/engine/gamesys/wscript
