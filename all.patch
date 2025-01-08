@@ -97,18 +97,9 @@ index 4bd9ca09f7..6e01b8e1c4 100644
      if platform in ('x86_64-macos','arm64-macos'):
          conf.env['FRAMEWORK_OPENAL'] = ['OpenAL']
 diff --git a/ci/ci.py b/ci/ci.py
-index 468b4ffeee..d99f3dc196 100644
+index 468b4ffeee..5d12f11abb 100644
 --- a/ci/ci.py
 +++ b/ci/ci.py
-@@ -204,7 +204,7 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
- 
-     install_sdk = 'install_sdk'
-     # for some platforms, we use the locally installed platform sdk
--    if platform in ('x86_64-macos', 'arm64-macos', 'arm64-ios', 'x86_64-ios', 'js-web', 'wasm-web'):
-+    if platform in ('arm64-linux', 'x86_64-linux', 'x86_64-macos', 'arm64-macos', 'arm64-ios', 'x86_64-ios', 'js-web', 'wasm-web'):
-         install_sdk = ''
- 
-     args = ('python scripts/build.py distclean %s install_ext check_sdk' % install_sdk).split()
 @@ -244,8 +244,8 @@ def build_engine(platform, channel, with_valgrind = False, with_asan = False, wi
      if with_vanilla_lua:
          waf_opts.append('--use-vanilla-lua')
