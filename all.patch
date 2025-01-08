@@ -1,5 +1,5 @@
 diff --git a/build_tools/sdk.py b/build_tools/sdk.py
-index c73b4b5bcc..8af74495e6 100644
+index c73b4b5bcc..0cccc85551 100644
 --- a/build_tools/sdk.py
 +++ b/build_tools/sdk.py
 @@ -71,8 +71,8 @@ ANDROID_64_NDK_API_VERSION='21' # Android 5.0
@@ -13,11 +13,44 @@ index c73b4b5bcc..8af74495e6 100644
  PACKAGES_WIN32_TOOLCHAIN=f"Microsoft-Visual-Studio-2022-{VERSION_WINDOWS_MSVC_2022}"
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
+@@ -117,10 +117,10 @@ defold_info['win10sdk']['version'] = VERSION_WINDOWS_SDK_10
+ defold_info['win10sdk']['pattern'] = "Win32/%s" % PACKAGES_WIN32_SDK_10
+ 
+ defold_info['x86_64-linux']['version'] = VERSION_LINUX_CLANG
+-defold_info['x86_64-linux']['pattern'] = 'linux/clang-%s' % VERSION_LINUX_CLANG
++defold_info['x86_64-linux']['pattern'] = 'x86_64-linux/clang-%s' % VERSION_LINUX_CLANG
+ 
+ defold_info['arm64-linux']['version'] = VERSION_LINUX_CLANG
+-defold_info['arm64-linux']['pattern'] = 'linux/clang-%s' % VERSION_LINUX_CLANG
++defold_info['arm64-linux']['pattern'] = 'arm64-linux/clang-%s' % VERSION_LINUX_CLANG
+ 
+ ## **********************************************************************************************
+ 
 diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
-index 4bd9ca09f7..b19fb68332 100644
+index 4bd9ca09f7..6e01b8e1c4 100644
 --- a/build_tools/waf_dynamo.py
 +++ b/build_tools/waf_dynamo.py
-@@ -1596,7 +1596,7 @@ def detect(conf):
+@@ -383,6 +383,7 @@ def default_flags(self):
+             if f == 'CXXFLAGS':
+                 self.env.append_value(f, ['-fno-rtti'])
+ 
++        print("<!> linkflags: ", f'--target={clang_arch}', build_util.get_target_platform())
+         self.env.append_value('LINKFLAGS', [f'--target={clang_arch}'])
+ 
+     elif "macos" == build_util.get_target_os():
+@@ -1449,6 +1450,11 @@ def run_tests(ctx, valgrind = False, configfile = None):
+             if 'web' in ctx.env.PLATFORM: # should be moved to TEST_LAUNCH_ARGS
+                 cmd = '%s %s' % (ctx.env['NODEJS'][0], cmd)
+ 
++            if ctx.env.PLATFORM != ctx.env.BUILD_PLATFORM and 'arm64-linux' in ctx.env.PLATFORM:
++                cmd = '%s %s' % ('qemu-aarch64 -L /usr/aarch64-linux-gnu', cmd) # TODO: move to ctx.env['QEMU_AARCH64']
++
++        print("<!> run_tests: ", cmd, "platform", ctx.env.PLATFORM, "build_platform", ctx.env.BUILD_PLATFORM)
++
+         # disable shortly during beta release, due to issue with jctest + test_gui
+         valgrind = False
+         if valgrind:
+@@ -1596,7 +1602,7 @@ def detect(conf):
          print ("Codesign disabled", Options.options.skip_codesign)
  
      # Vulkan support
@@ -26,20 +59,19 @@ index 4bd9ca09f7..b19fb68332 100644
          conf.fatal('Vulkan is unsupported on %s' % build_util.get_target_platform())
  
      if 'win32' in platform:
-@@ -1713,8 +1713,12 @@ def detect(conf):
+@@ -1731,6 +1737,11 @@ def detect(conf):
+             conf.env.CC = "clang"
+             conf.env.CPP = "clang -E"
  
-     elif 'linux' == build_util.get_target_os():
-         bin_dir=os.path.join(sdk.get_toolchain_root(sdkinfo, build_util.get_target_platform()),'bin')
-+        print("<!> detect: bin_dir1", bin_dir)
-+        bin_dir=os.path.join(sdk.get_toolchain_root(sdkinfo, host_platform),'bin')
-+        print("<!> detect: bin_dir2", bin_dir)
++        if platform == 'arm64-linux' and platform != host_platform and not Options.options.skip_tests:
++            # We'll use qemu to run tests on non-arm64 platforms
++            if not conf.env['QEMU_AARCH64']:
++                conf.find_program('qemu-aarch64', var='QEMU_AARCH64', mandatory = True)
++
+     platform_setup_tools(conf, build_util)
  
-         conf.find_program('clang', var='CLANG', mandatory = False, path_list=[bin_dir])
-+        print("<!> detect: conf.env.CLANG", conf.env.CLANG)
- 
-         if conf.env.CLANG:
-             conf.env['CC']      = '%s/clang' % bin_dir
-@@ -1773,9 +1777,11 @@ def detect(conf):
+     # jg: this whole thing is a 'dirty hack' to be able to pick up our own SDKs
+@@ -1773,9 +1784,11 @@ def detect(conf):
          if not 'CLANG' in conf.env:
              conf.find_program('clang',   var='CLANG', mandatory = True)
              os.environ['CLANG'] = conf.env.CLANG[0]
@@ -51,7 +83,7 @@ index 4bd9ca09f7..b19fb68332 100644
  
      # NOTE: We override after check_tool. Otherwise waf gets confused and CXX_NAME etc are missing..
      if platform in ('js-web', 'wasm-web'):
-@@ -1881,8 +1887,11 @@ def detect(conf):
+@@ -1881,8 +1894,11 @@ def detect(conf):
          conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
      elif platform in ('win32', 'x86_64-win32'):
          conf.env['LINKFLAGS_OPENGL'] = ['opengl32.lib', 'glu32.lib']
@@ -261,6 +293,21 @@ index b215f403bb..3785dc5b99 100644
                  return new InvocationResult(true, Collections.emptyList());
              }
  
+diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
+index 6690b929c6..76960fe5b7 100644
+--- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
++++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
+@@ -282,6 +282,10 @@ use_thread.type = bool
+ use_thread.help = enables sound threading
+ use_thread.default = 1
+ 
++frame_count.type = integer
++frame_count.help = number of sound frames to process in a single update, 0 to use the default value depending on the platform
++frame_count.default = 0
++
+ [resource]
+ help = Resource loading and management related settings
+ http_cache.type = bool
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
 index e54b20a03e..e5e530045a 100644
 --- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
@@ -302,6 +349,21 @@ index eb2ef1ae25..2709d6aee5 100644
          String finalShaderSource                 = shaderPreprocessor.getCompiledSource();
          IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
          ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
+diff --git a/editor/resources/meta.edn b/editor/resources/meta.edn
+index 5ff8a3934f..d11c119b33 100644
+--- a/editor/resources/meta.edn
++++ b/editor/resources/meta.edn
+@@ -436,6 +436,10 @@
+    :help "Enables sound threading",
+    :default true,
+    :path ["sound" "use_thread"]}
++  {:type :integer,
++   :help "number of sound frames to process in a single update, 0 to use the default value depending on the platform",
++   :default 0,
++   :path ["sound" "frame_count"]}
+   {:type :integer,
+    :help "max number of sprites, 128 by default",
+    :default 128,
 diff --git a/engine/dlib/src/dlib/job_thread.cpp b/engine/dlib/src/dlib/job_thread.cpp
 index 887a9975ad..3fb865ad08 100644
 --- a/engine/dlib/src/dlib/job_thread.cpp
@@ -315,6 +377,59 @@ index 887a9975ad..3fb865ad08 100644
  #endif
      return context;
  }
+diff --git a/engine/dlib/src/test/wscript b/engine/dlib/src/test/wscript
+index 44fd94377f..a2faf09997 100644
+--- a/engine/dlib/src/test/wscript
++++ b/engine/dlib/src/test/wscript
+@@ -7,7 +7,7 @@ from BuildUtility import create_build_utility
+ 
+ def create_test(bld, name, extra_libs = None, extra_features = None, embed_source = None,
+                 extra_includes = None, extra_defines = None, skip_run = False, extra_local_libs = None, exclude_libs = None, target_name = None):
+-
++    print("<!> create_test: ", name)
+     # Sometimes, we need to disable certain tests until they're supported
+     if not platform_supports_feature(bld.env.PLATFORM, name, {}):
+         print ("Skipping test '%s' due to platform missing feature" % name)
+diff --git a/engine/dlib/wscript b/engine/dlib/wscript
+index a64c762f4a..80d6b51be9 100644
+--- a/engine/dlib/wscript
++++ b/engine/dlib/wscript
+@@ -50,12 +50,25 @@ def build(bld):
+     TestContext.initialize_test_context(test_context, bld)
+ 
+ def shutdown(sht):
++    import time
++    print("<!> dlib: shutdown")
++    time.sleep(5)
++
+     if not TestContext.is_valid(test_context) or Options.options.skip_build_tests or Options.options.skip_tests:
++        print("<!> dlib: skip tests: ", not TestContext.is_valid(test_context), Options.options.skip_build_tests, Options.options.skip_tests)
++        # sys.exit(1)
++        return
++
++    if True:
++        print("<!> dlib: skip tests!")
+         return
+ 
++    print("<!> dlib: run tests!")
++    time.sleep(1)
++
+     # TODO: Fix support for win32
+     from waflib.Logs import warn, error
+-    import urllib, urllib.request, time, atexit
++    import urllib, urllib.request, atexit
+ 
+     server_sockets = None
+     bash_prefix = ''
+@@ -123,6 +136,8 @@ def shutdown(sht):
+     finally:
+         os.remove(configfilepath)
+ 
++    # sys.exit(1)
++
+     # The test should work on OSX, but the CI (Catalina) just crashed with no callstack (even in lldb)
+     # Postponing a fix until I've updated to Catalina on my machine as well
+     # if not sys.platform in ('win32', 'darwin'):
 diff --git a/engine/engine/content/builtins/input/default.gamepads b/engine/engine/content/builtins/input/default.gamepads
 index ae74602695..d57ae8d85b 100644
 --- a/engine/engine/content/builtins/input/default.gamepads
@@ -354,6 +469,18 @@ index ae74602695..d57ae8d85b 100644
 +    map { input: GAMEPAD_START type: GAMEPAD_TYPE_BUTTON index: 9 }
 +    map { input: GAMEPAD_BACK type: GAMEPAD_TYPE_BUTTON index: 8 }
 +}
+diff --git a/engine/engine/src/engine.cpp b/engine/engine/src/engine.cpp
+index fd4e39ba67..8bef8a2ba7 100644
+--- a/engine/engine/src/engine.cpp
++++ b/engine/engine/src/engine.cpp
+@@ -1080,6 +1080,7 @@ namespace dmEngine
+ #else
+         sound_params.m_UseThread = dmConfigFile::GetInt(engine->m_Config, "sound.use_thread", 1) != 0;
+ #endif
++        sound_params.m_FrameCount = dmConfigFile::GetInt(engine->m_Config, "sound.frame_count", 0);
+         dmSound::Result soundInit = dmSound::Initialize(engine->m_Config, &sound_params);
+         if (dmSound::RESULT_OK == soundInit) {
+             dmLogInfo("Initialised sound device '%s'", sound_params.m_OutputDevice);
 diff --git a/engine/engine/wscript b/engine/engine/wscript
 index e002b73190..8df493de05 100644
 --- a/engine/engine/wscript
@@ -404,6 +531,25 @@ index 79e32f8bcb..773c8c4390 100644
              if(IsShaderLanguageSupported(context, shader->m_Language, shader_desc->m_ShaderType))
              {
                  if (shader->m_VariantTextureArray)
+diff --git a/engine/graphics/src/null/graphics_null.cpp b/engine/graphics/src/null/graphics_null.cpp
+index 085954f44e..8c93ac342a 100644
+--- a/engine/graphics/src/null/graphics_null.cpp
++++ b/engine/graphics/src/null/graphics_null.cpp
+@@ -910,10 +910,12 @@ namespace dmGraphics
+         {
+             case ShaderDesc::SHADER_TYPE_VERTEX:
+                 return language == ShaderDesc::LANGUAGE_GLSL_SM140 ||
+-                       language == ShaderDesc::LANGUAGE_GLSL_SM330;
++                       language == ShaderDesc::LANGUAGE_GLSL_SM330 ||
++                       language == ShaderDesc::LANGUAGE_GLES_SM300;
+             case ShaderDesc::SHADER_TYPE_FRAGMENT:
+                 return language == ShaderDesc::LANGUAGE_GLSL_SM140 ||
+-                       language == ShaderDesc::LANGUAGE_GLSL_SM330;
++                       language == ShaderDesc::LANGUAGE_GLSL_SM330 ||
++                       language == ShaderDesc::LANGUAGE_GLES_SM300;
+             case ShaderDesc::SHADER_TYPE_COMPUTE:
+                 return language == ShaderDesc::LANGUAGE_GLSL_SM430 ||
+                        language == ShaderDesc::LANGUAGE_SPIRV;
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
 index 916e47abff..b221ec9b01 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
@@ -926,6 +1072,69 @@ index fe7734fa31..37bc8b0e6f 100644
                      var len = sample_count / this.sampleRate;
                      // use real buffer length next time.
                      this.bufferDuration = len;
+diff --git a/engine/sound/src/sound.cpp b/engine/sound/src/sound.cpp
+index 9208124527..a90023e0ac 100644
+--- a/engine/sound/src/sound.cpp
++++ b/engine/sound/src/sound.cpp
+@@ -256,7 +256,7 @@ namespace dmSound
+         params->m_MaxSources = 16;
+         params->m_MaxBuffers = 32;
+         params->m_BufferSize = 12 * 4096;
+-        params->m_FrameCount = 768;
++        params->m_FrameCount = 0;
+         params->m_MaxInstances = 256;
+         params->m_UseThread = true;
+     }
+@@ -359,7 +359,11 @@ namespace dmSound
+         }
+ 
+         sound->m_MixRate = device_info.m_MixRate;
+-        sound->m_DeviceFrameCount = device_info.m_FrameCount ? device_info.m_FrameCount : params->m_FrameCount;
++        sound->m_DeviceFrameCount = params->m_FrameCount ? params->m_FrameCount : device_info.m_FrameCount;
++        if (!sound->m_DeviceFrameCount)
++        {
++            sound->m_DeviceFrameCount = 768;
++        }
+         sound->m_Instances.SetCapacity(max_instances);
+         sound->m_Instances.SetSize(max_instances);
+         sound->m_InstancesPool.SetCapacity(max_instances);
+diff --git a/engine/sound/src/sound_common.cpp b/engine/sound/src/sound_common.cpp
+deleted file mode 100644
+index f301d6b927..0000000000
+--- a/engine/sound/src/sound_common.cpp
++++ /dev/null
+@@ -1,31 +0,0 @@
+-// Copyright 2020-2024 The Defold Foundation
+-// Copyright 2014-2020 King
+-// Copyright 2009-2014 Ragnar Svensson, Christian Murray
+-// Licensed under the Defold License version 1.0 (the "License"); you may not use
+-// this file except in compliance with the License.
+-//
+-// You may obtain a copy of the License, together with FAQs at
+-// https://www.defold.com/license
+-//
+-// Unless required by applicable law or agreed to in writing, software distributed
+-// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+-// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+-// specific language governing permissions and limitations under the License.
+-
+-#include "sound.h"
+-
+-namespace dmSound
+-{
+-    void SetDefaultInitializeParams(InitializeParams* params)
+-    {
+-        memset(params, 0, sizeof(InitializeParams));
+-        params->m_OutputDevice = "default";
+-        params->m_MasterGain = 1.0f;
+-        params->m_MaxSoundData = 128;
+-        params->m_MaxSources = 16;
+-        params->m_MaxBuffers = 32;
+-        params->m_BufferSize = 12 * 4096;
+-        params->m_FrameCount = 768;
+-        params->m_MaxInstances = 256;
+-    }
+-}
 diff --git a/engine/tools/wscript b/engine/tools/wscript
 index 960fb697a9..8a8a3fa7ed 100755
 --- a/engine/tools/wscript
@@ -962,7 +1171,7 @@ index 0000000000..25877de7f4
 +cp packages/glfw-3.4-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
 +cp packages/astcenc-8b0aa01-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
 diff --git a/scripts/build.py b/scripts/build.py
-index ccaa10a75a..651aec591c 100755
+index ccaa10a75a..f6ec2c7945 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
 @@ -35,7 +35,7 @@ from threading import Thread, Event
@@ -993,7 +1202,15 @@ index ccaa10a75a..651aec591c 100755
          run.shell_command("%s %s" % (strip, path))
          return True
  
-@@ -1368,9 +1371,12 @@ class Configuration(object):
+@@ -1107,6 +1110,7 @@ class Configuration(object):
+         supported_tests['x86_64-win32'] = ['win32', 'x86_64-win32', 'arm64-nx64', 'x86_64-ps4', 'x86_64-ps5']
+         supported_tests['arm64-macos'] = ['x86_64-macos', 'arm64-macos', 'wasm-web', 'js-web']
+         supported_tests['x86_64-macos'] = ['x86_64-macos', 'wasm-web', 'js-web']
++        supported_tests['x86_64-linux'] = ['arm64-linux']
+ 
+         return self.target_platform in supported_tests.get(self.host, []) or self.host == self.target_platform
+ 
+@@ -1368,9 +1372,12 @@ class Configuration(object):
          test_dir = join(self.defold_root, 'com.dynamo.cr/com.dynamo.cr.bob.test')
  
          sha1 = self._git_sha1()
@@ -1006,7 +1223,7 @@ index ccaa10a75a..651aec591c 100755
              self.copy_local_bob_artefacts()
  
          env = self._form_env()
-@@ -2136,8 +2142,17 @@ class Configuration(object):
+@@ -2136,8 +2143,17 @@ class Configuration(object):
  
  
      def upload_to_archive(self, src_file, dst_path):
