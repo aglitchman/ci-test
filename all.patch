@@ -517,49 +517,57 @@ index e002b73190..58e0f6aaf5 100644
          if waflib.Options.options.with_vulkan:
              conf.env.append_value('LINKFLAGS', ['vulkan-1.lib'])
 diff --git a/engine/gamesys/src/gamesys/components/comp_model.cpp b/engine/gamesys/src/gamesys/components/comp_model.cpp
-index 34afa2123c..18d3f84add 100644
+index 34afa2123c..559eed9ca6 100644
 --- a/engine/gamesys/src/gamesys/components/comp_model.cpp
 +++ b/engine/gamesys/src/gamesys/components/comp_model.cpp
-@@ -171,16 +171,16 @@ namespace dmGameSystem
+@@ -171,16 +171,17 @@ namespace dmGameSystem
          world->m_Components.SetCapacity(comp_count);
          world->m_RenderObjects.SetCapacity(comp_count);
          // position, normal, tangent, color, texcoord0, texcoord1 * sizeof(float)
 -        DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3+3+4+4+2+2)*4), Invalid_Struct_Size);
-+        DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3*4+3*4+4*2+4*2+2*2+2*2)), Invalid_Struct_Size);
++        // DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3*4+3*4+4*2+4*2+2*2+2*2)), Invalid_Struct_Size);
++        DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3*4+4*1+2*2)), Invalid_Struct_Size);
  
          dmGraphics::HContext graphics_context = dmRender::GetGraphicsContext(render_context);
          dmGraphics::HVertexStreamDeclaration stream_declaration_vertex = dmGraphics::NewVertexStreamDeclaration(graphics_context);
          dmGraphics::AddVertexStream(stream_declaration_vertex, "position",  3, dmGraphics::TYPE_FLOAT, false);
-         dmGraphics::AddVertexStream(stream_declaration_vertex, "normal",    3, dmGraphics::TYPE_FLOAT, false);
+-        dmGraphics::AddVertexStream(stream_declaration_vertex, "normal",    3, dmGraphics::TYPE_FLOAT, false);
 -        dmGraphics::AddVertexStream(stream_declaration_vertex, "tangent",   4, dmGraphics::TYPE_FLOAT, false);
 -        dmGraphics::AddVertexStream(stream_declaration_vertex, "color",     4, dmGraphics::TYPE_FLOAT, false);
 -        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord0", 2, dmGraphics::TYPE_FLOAT, false);
 -        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord1", 2, dmGraphics::TYPE_FLOAT, false);
-+        dmGraphics::AddVertexStream(stream_declaration_vertex, "tangent",   4, dmGraphics::TYPE_SHORT, true);
-+        dmGraphics::AddVertexStream(stream_declaration_vertex, "color",     4, dmGraphics::TYPE_SHORT, true);
++        dmGraphics::AddVertexStream(stream_declaration_vertex, "normal",    4, dmGraphics::TYPE_BYTE, true);
++        // dmGraphics::AddVertexStream(stream_declaration_vertex, "tangent",   4, dmGraphics::TYPE_SHORT, true);
++        // dmGraphics::AddVertexStream(stream_declaration_vertex, "color",     4, dmGraphics::TYPE_SHORT, true);
 +        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord0", 2, dmGraphics::TYPE_SHORT, true);
-+        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord1", 2, dmGraphics::TYPE_SHORT, true);
++        // dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord1", 2, dmGraphics::TYPE_SHORT, true);
  
          dmGraphics::HVertexStreamDeclaration stream_declaration_instance = dmGraphics::NewVertexStreamDeclaration(graphics_context, dmGraphics::VERTEX_STEP_FUNCTION_INSTANCE);
          dmGraphics::AddVertexStream(stream_declaration_instance, "mtx_world",  16, dmGraphics::TYPE_FLOAT, false);
 diff --git a/engine/gamesys/src/gamesys/resources/res_model.cpp b/engine/gamesys/src/gamesys/resources/res_model.cpp
-index b6f1599089..b73a482701 100644
+index b6f1599089..e9c60bec49 100644
 --- a/engine/gamesys/src/gamesys/resources/res_model.cpp
 +++ b/engine/gamesys/src/gamesys/resources/res_model.cpp
-@@ -114,19 +114,19 @@ namespace dmGameSystem
+@@ -114,19 +114,25 @@ namespace dmGameSystem
              for (int c = 0; c < 3; ++c)
              {
                  out_write_ptr->pos[c] = *positions++;
 -                out_write_ptr->normal[c] = normals ? *normals++ : 0.0f;
-+                out_write_ptr->normal[c] = normals ? *normals++ : 0;
++                // out_write_ptr->normal[c] = normals ? *normals++ : 0;
              }
  
++            for (int c = 0; c < 3; ++c)
++            {
++                out_write_ptr->normal[c] = normals ? (int8_t)((*normals++) * 127.0f) : 0;
++            }
++            out_write_ptr->normal[3] = (int8_t)(1.0f * 127.0f);
++
              for (int c = 0; c < 4; ++c)
              {
 -                out_write_ptr->color[c] = colors ? *colors++ : 1.0f;
 -                out_write_ptr->tangent[c] = tangents ? *tangents++ : 0.0f;
-+                out_write_ptr->color[c] = colors ? (int16_t)((*colors++) * 32767.0f) : 1;
-+                out_write_ptr->tangent[c] = tangents ? (int16_t)((*tangents++) * 32767.0f) : 0;
++                // out_write_ptr->color[c] = colors ? (int16_t)((*colors++) * 32767.0f) : 1;
++                // out_write_ptr->tangent[c] = tangents ? (int16_t)((*tangents++) * 32767.0f) : 0;
              }
  
              for (int c = 0; c < 2; ++c)
@@ -567,7 +575,7 @@ index b6f1599089..b73a482701 100644
 -                out_write_ptr->uv0[c] = uv0 ? *uv0++ : 0.0f;
 -                out_write_ptr->uv1[c] = uv1 ? *uv1++ : 0.0f;
 +                out_write_ptr->uv0[c] = uv0 ? (int16_t)((*uv0++) * 32767.0f) : 0;
-+                out_write_ptr->uv1[c] = uv1 ? (int16_t)((*uv1++) * 32767.0f) : 0;
++                // out_write_ptr->uv1[c] = uv1 ? (int16_t)((*uv1++) * 32767.0f) : 0;
              }
  
              out_write_ptr++;
@@ -1099,21 +1107,23 @@ index 33f5d33201..39d96e5e61 100644
                  break;
              case PLATFORM_GRAPHICS_API_VULKAN:
 diff --git a/engine/rig/src/dmsdk/rig/rig.h b/engine/rig/src/dmsdk/rig/rig.h
-index 92d2a75e73..7d230b339d 100644
+index 92d2a75e73..1930a4f27c 100644
 --- a/engine/rig/src/dmsdk/rig/rig.h
 +++ b/engine/rig/src/dmsdk/rig/rig.h
-@@ -109,10 +109,10 @@ namespace dmRig
+@@ -108,11 +108,11 @@ namespace dmRig
+     struct RigModelVertex
      {
          float pos[3];
-         float normal[3];
+-        float normal[3];
 -        float tangent[4];
 -        float color[4];
 -        float uv0[2];
 -        float uv1[2];
-+        int16_t tangent[4];
-+        int16_t color[4];
++        int8_t normal[4];
++        // int16_t tangent[4];
++        // int16_t color[4];
 +        int16_t uv0[2];
-+        int16_t uv1[2];
++        // int16_t uv1[2];
      };
  
      // Can we not use the skeleton directly?
