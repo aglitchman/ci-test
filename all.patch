@@ -515,6 +515,61 @@ index e002b73190..8df493de05 100644
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
+diff --git a/engine/gamesys/src/gamesys/components/comp_model.cpp b/engine/gamesys/src/gamesys/components/comp_model.cpp
+index 34afa2123c..18d3f84add 100644
+--- a/engine/gamesys/src/gamesys/components/comp_model.cpp
++++ b/engine/gamesys/src/gamesys/components/comp_model.cpp
+@@ -171,16 +171,16 @@ namespace dmGameSystem
+         world->m_Components.SetCapacity(comp_count);
+         world->m_RenderObjects.SetCapacity(comp_count);
+         // position, normal, tangent, color, texcoord0, texcoord1 * sizeof(float)
+-        DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3+3+4+4+2+2)*4), Invalid_Struct_Size);
++        DM_STATIC_ASSERT( sizeof(dmRig::RigModelVertex) == ((3*4+3*4+4*2+4*2+2*2+2*2)), Invalid_Struct_Size);
+ 
+         dmGraphics::HContext graphics_context = dmRender::GetGraphicsContext(render_context);
+         dmGraphics::HVertexStreamDeclaration stream_declaration_vertex = dmGraphics::NewVertexStreamDeclaration(graphics_context);
+         dmGraphics::AddVertexStream(stream_declaration_vertex, "position",  3, dmGraphics::TYPE_FLOAT, false);
+         dmGraphics::AddVertexStream(stream_declaration_vertex, "normal",    3, dmGraphics::TYPE_FLOAT, false);
+-        dmGraphics::AddVertexStream(stream_declaration_vertex, "tangent",   4, dmGraphics::TYPE_FLOAT, false);
+-        dmGraphics::AddVertexStream(stream_declaration_vertex, "color",     4, dmGraphics::TYPE_FLOAT, false);
+-        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord0", 2, dmGraphics::TYPE_FLOAT, false);
+-        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord1", 2, dmGraphics::TYPE_FLOAT, false);
++        dmGraphics::AddVertexStream(stream_declaration_vertex, "tangent",   4, dmGraphics::TYPE_SHORT, true);
++        dmGraphics::AddVertexStream(stream_declaration_vertex, "color",     4, dmGraphics::TYPE_SHORT, true);
++        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord0", 2, dmGraphics::TYPE_SHORT, true);
++        dmGraphics::AddVertexStream(stream_declaration_vertex, "texcoord1", 2, dmGraphics::TYPE_SHORT, true);
+ 
+         dmGraphics::HVertexStreamDeclaration stream_declaration_instance = dmGraphics::NewVertexStreamDeclaration(graphics_context, dmGraphics::VERTEX_STEP_FUNCTION_INSTANCE);
+         dmGraphics::AddVertexStream(stream_declaration_instance, "mtx_world",  16, dmGraphics::TYPE_FLOAT, false);
+diff --git a/engine/gamesys/src/gamesys/resources/res_model.cpp b/engine/gamesys/src/gamesys/resources/res_model.cpp
+index b6f1599089..b73a482701 100644
+--- a/engine/gamesys/src/gamesys/resources/res_model.cpp
++++ b/engine/gamesys/src/gamesys/resources/res_model.cpp
+@@ -114,19 +114,19 @@ namespace dmGameSystem
+             for (int c = 0; c < 3; ++c)
+             {
+                 out_write_ptr->pos[c] = *positions++;
+-                out_write_ptr->normal[c] = normals ? *normals++ : 0.0f;
++                out_write_ptr->normal[c] = normals ? *normals++ : 0;
+             }
+ 
+             for (int c = 0; c < 4; ++c)
+             {
+-                out_write_ptr->color[c] = colors ? *colors++ : 1.0f;
+-                out_write_ptr->tangent[c] = tangents ? *tangents++ : 0.0f;
++                out_write_ptr->color[c] = colors ? (int16_t)((*colors++) * 32767.0f) : 1;
++                out_write_ptr->tangent[c] = tangents ? (int16_t)((*tangents++) * 32767.0f) : 0;
+             }
+ 
+             for (int c = 0; c < 2; ++c)
+             {
+-                out_write_ptr->uv0[c] = uv0 ? *uv0++ : 0.0f;
+-                out_write_ptr->uv1[c] = uv1 ? *uv1++ : 0.0f;
++                out_write_ptr->uv0[c] = uv0 ? (int16_t)((*uv0++) * 32767.0f) : 0;
++                out_write_ptr->uv1[c] = uv1 ? (int16_t)((*uv1++) * 32767.0f) : 0;
+             }
+ 
+             out_write_ptr++;
 diff --git a/engine/gamesys/wscript b/engine/gamesys/wscript
 index ad03b4201c..fddc0a3fe7 100644
 --- a/engine/gamesys/wscript
@@ -1042,6 +1097,25 @@ index 33f5d33201..39d96e5e61 100644
                  res = OpenWindowOpenGL(window, params);
                  break;
              case PLATFORM_GRAPHICS_API_VULKAN:
+diff --git a/engine/rig/src/dmsdk/rig/rig.h b/engine/rig/src/dmsdk/rig/rig.h
+index 92d2a75e73..7d230b339d 100644
+--- a/engine/rig/src/dmsdk/rig/rig.h
++++ b/engine/rig/src/dmsdk/rig/rig.h
+@@ -109,10 +109,10 @@ namespace dmRig
+     {
+         float pos[3];
+         float normal[3];
+-        float tangent[4];
+-        float color[4];
+-        float uv0[2];
+-        float uv1[2];
++        int16_t tangent[4];
++        int16_t color[4];
++        int16_t uv0[2];
++        int16_t uv1[2];
+     };
+ 
+     // Can we not use the skeleton directly?
 diff --git a/engine/sound/src/devices/device_wasapi.cpp b/engine/sound/src/devices/device_wasapi.cpp
 index 3253f93ef2..a1253cadea 100644
 --- a/engine/sound/src/devices/device_wasapi.cpp
