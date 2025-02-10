@@ -545,23 +545,22 @@ index 34afa2123c..559eed9ca6 100644
          dmGraphics::HVertexStreamDeclaration stream_declaration_instance = dmGraphics::NewVertexStreamDeclaration(graphics_context, dmGraphics::VERTEX_STEP_FUNCTION_INSTANCE);
          dmGraphics::AddVertexStream(stream_declaration_instance, "mtx_world",  16, dmGraphics::TYPE_FLOAT, false);
 diff --git a/engine/gamesys/src/gamesys/resources/res_model.cpp b/engine/gamesys/src/gamesys/resources/res_model.cpp
-index b6f1599089..e9c60bec49 100644
+index b6f1599089..22caa5b9df 100644
 --- a/engine/gamesys/src/gamesys/resources/res_model.cpp
 +++ b/engine/gamesys/src/gamesys/resources/res_model.cpp
-@@ -114,19 +114,25 @@ namespace dmGameSystem
+@@ -114,19 +114,24 @@ namespace dmGameSystem
              for (int c = 0; c < 3; ++c)
              {
                  out_write_ptr->pos[c] = *positions++;
 -                out_write_ptr->normal[c] = normals ? *normals++ : 0.0f;
 +                // out_write_ptr->normal[c] = normals ? *normals++ : 0;
-             }
- 
++            }
++
 +            for (int c = 0; c < 3; ++c)
 +            {
 +                out_write_ptr->normal[c] = normals ? (int8_t)((*normals++) * 127.0f) : 0;
-+            }
-+            out_write_ptr->normal[3] = (int8_t)(1.0f * 127.0f);
-+
+             }
+ 
              for (int c = 0; c < 4; ++c)
              {
 -                out_write_ptr->color[c] = colors ? *colors++ : 1.0f;
@@ -1127,6 +1126,60 @@ index 92d2a75e73..1930a4f27c 100644
      };
  
      // Can we not use the skeleton directly?
+diff --git a/engine/rig/src/rig.cpp b/engine/rig/src/rig.cpp
+index dfc9d7657f..8efa39f3ad 100644
+--- a/engine/rig/src/rig.cpp
++++ b/engine/rig/src/rig.cpp
+@@ -1056,19 +1056,19 @@ namespace dmRig
+                 for (int c = 0; c < 3; ++c)
+                 {
+                     out_write_ptr->pos[c] = *positions++;
+-                    out_write_ptr->normal[c] = *normals++;
++                    out_write_ptr->normal[c] = (int8_t)((*normals++) * 127.0f);
+                 }
+ 
+                 for (int c = 0; c < 4; ++c)
+                 {
+-                    out_write_ptr->color[c] = colors ? *colors++ : 1.0f;
+-                    out_write_ptr->tangent[c] = *tangents++;
++                    // out_write_ptr->color[c] = colors ? *colors++ : 1.0f;
++                    // out_write_ptr->tangent[c] = *tangents++;
+                 }
+ 
+                 for (int c = 0; c < 2; ++c)
+                 {
+-                    out_write_ptr->uv0[c] = uv0 ? *uv0++ : 0.0f;
+-                    out_write_ptr->uv1[c] = uv1 ? *uv1++ : 0.0f;
++                    out_write_ptr->uv0[c] = uv0 ? (int16_t)((*uv0++) * 32767.0f) : 0;
++                    // out_write_ptr->uv1[c] = uv1 ? *uv1++ : 0.0f;
+                 }
+ 
+                 out_write_ptr++;
+@@ -1096,19 +1096,19 @@ namespace dmRig
+                 for (int c = 0; c < 3; ++c)
+                 {
+                     out_write_ptr->pos[c] = positions[idx*3+c];
+-                    out_write_ptr->normal[c] = normals[idx*3+c];
++                    out_write_ptr->normal[c] = (int8_t)(normals[idx*3+c] * 127.0f);
+                 }
+ 
+                 for (int c = 0; c < 4; ++c)
+                 {
+-                    out_write_ptr->color[c] = colors ? colors[idx*4+c] : 1.0f;
+-                    out_write_ptr->tangent[c] = tangents[idx*4+c];
++                    // out_write_ptr->color[c] = colors ? colors[idx*4+c] : 1.0f;
++                    // out_write_ptr->tangent[c] = tangents[idx*4+c];
+                 }
+ 
+                 for (int c = 0; c < 2; ++c)
+                 {
+-                    out_write_ptr->uv0[c] = uv0 ? uv0[idx*2+c] : 0.0f;
+-                    out_write_ptr->uv1[c] = uv1 ? uv1[idx*2+c] : 0.0f;
++                    out_write_ptr->uv0[c] = uv0 ? (int16_t)(uv0[idx*2+c] * 32767.0f) : 0;
++                    // out_write_ptr->uv1[c] = uv1 ? uv1[idx*2+c] : 0.0f;
+                 }
+ 
+                 out_write_ptr++;
 diff --git a/engine/sound/src/devices/device_wasapi.cpp b/engine/sound/src/devices/device_wasapi.cpp
 index 3253f93ef2..a1253cadea 100644
 --- a/engine/sound/src/devices/device_wasapi.cpp
