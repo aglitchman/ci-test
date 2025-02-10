@@ -1,5 +1,19 @@
+diff --git a/README_ARTSIOM.md b/README_ARTSIOM.md
+new file mode 100644
+index 0000000000..51b2ac3469
+--- /dev/null
++++ b/README_ARTSIOM.md
+@@ -0,0 +1,8 @@
++
++./scripts/build.py shell
++./scripts/build.py install_ext
++./scripts/build.py build_engine --platform=arm64-linux --skip-docs --skip-builtins
++./scripts/build.py build_engine --platform=arm64-linux --skip-docs --skip-tests --skip-builtins -- --skip-build-tests
++
++./scripts/build.py build_engine --platform=x86_64-linux --skip-docs --skip-builtins
++./scripts/build.py build_engine --platform=x86_64-linux --skip-docs --skip-tests --skip-builtins -- --skip-build-tests
 diff --git a/build_tools/sdk.py b/build_tools/sdk.py
-index c73b4b5bcc..0cccc85551 100644
+index fec511ff99..c9664731e5 100644
 --- a/build_tools/sdk.py
 +++ b/build_tools/sdk.py
 @@ -71,8 +71,8 @@ ANDROID_64_NDK_API_VERSION='21' # Android 5.0
@@ -13,24 +27,22 @@ index c73b4b5bcc..0cccc85551 100644
  PACKAGES_WIN32_TOOLCHAIN=f"Microsoft-Visual-Studio-2022-{VERSION_WINDOWS_MSVC_2022}"
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
-@@ -117,10 +117,10 @@ defold_info['win10sdk']['version'] = VERSION_WINDOWS_SDK_10
- defold_info['win10sdk']['pattern'] = "Win32/%s" % PACKAGES_WIN32_SDK_10
- 
- defold_info['x86_64-linux']['version'] = VERSION_LINUX_CLANG
--defold_info['x86_64-linux']['pattern'] = 'linux/clang-%s' % VERSION_LINUX_CLANG
-+defold_info['x86_64-linux']['pattern'] = 'x86_64-linux/clang-%s' % VERSION_LINUX_CLANG
- 
- defold_info['arm64-linux']['version'] = VERSION_LINUX_CLANG
--defold_info['arm64-linux']['pattern'] = 'linux/clang-%s' % VERSION_LINUX_CLANG
-+defold_info['arm64-linux']['pattern'] = 'arm64-linux/clang-%s' % VERSION_LINUX_CLANG
- 
- ## **********************************************************************************************
- 
 diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
-index 4bd9ca09f7..6e01b8e1c4 100644
+index 4bd9ca09f7..4ee6a01fcc 100644
 --- a/build_tools/waf_dynamo.py
 +++ b/build_tools/waf_dynamo.py
-@@ -383,6 +383,7 @@ def default_flags(self):
+@@ -75,6 +75,10 @@ def platform_supports_feature(platform, feature, data):
+         return platform not in ['js-web', 'wasm-web', 'x86_64-ios']
+     if feature == 'opengl_compute':
+         return platform not in ['js-web', 'wasm-web', 'x86_64-ios', 'arm64-ios', 'arm64-macos', 'x86_64-macos']
++    if feature == 'opengl':
++        return platform not in ['arm64-linux']
++    if feature == 'opengles':
++        return platform in ['arm64-linux']
+     if feature == 'webgpu':
+         return platform in ['js-web', 'wasm-web']
+     return waf_dynamo_vendor.supports_feature(platform, feature, data)
+@@ -383,6 +387,7 @@ def default_flags(self):
              if f == 'CXXFLAGS':
                  self.env.append_value(f, ['-fno-rtti'])
  
@@ -38,7 +50,7 @@ index 4bd9ca09f7..6e01b8e1c4 100644
          self.env.append_value('LINKFLAGS', [f'--target={clang_arch}'])
  
      elif "macos" == build_util.get_target_os():
-@@ -1449,6 +1450,11 @@ def run_tests(ctx, valgrind = False, configfile = None):
+@@ -1449,6 +1454,11 @@ def run_tests(ctx, valgrind = False, configfile = None):
              if 'web' in ctx.env.PLATFORM: # should be moved to TEST_LAUNCH_ARGS
                  cmd = '%s %s' % (ctx.env['NODEJS'][0], cmd)
  
@@ -50,7 +62,7 @@ index 4bd9ca09f7..6e01b8e1c4 100644
          # disable shortly during beta release, due to issue with jctest + test_gui
          valgrind = False
          if valgrind:
-@@ -1596,7 +1602,7 @@ def detect(conf):
+@@ -1596,7 +1606,7 @@ def detect(conf):
          print ("Codesign disabled", Options.options.skip_codesign)
  
      # Vulkan support
@@ -59,7 +71,7 @@ index 4bd9ca09f7..6e01b8e1c4 100644
          conf.fatal('Vulkan is unsupported on %s' % build_util.get_target_platform())
  
      if 'win32' in platform:
-@@ -1731,6 +1737,11 @@ def detect(conf):
+@@ -1731,6 +1741,11 @@ def detect(conf):
              conf.env.CC = "clang"
              conf.env.CPP = "clang -E"
  
@@ -71,7 +83,7 @@ index 4bd9ca09f7..6e01b8e1c4 100644
      platform_setup_tools(conf, build_util)
  
      # jg: this whole thing is a 'dirty hack' to be able to pick up our own SDKs
-@@ -1773,9 +1784,11 @@ def detect(conf):
+@@ -1773,9 +1788,11 @@ def detect(conf):
          if not 'CLANG' in conf.env:
              conf.find_program('clang',   var='CLANG', mandatory = True)
              os.environ['CLANG'] = conf.env.CLANG[0]
@@ -83,19 +95,25 @@ index 4bd9ca09f7..6e01b8e1c4 100644
  
      # NOTE: We override after check_tool. Otherwise waf gets confused and CXX_NAME etc are missing..
      if platform in ('js-web', 'wasm-web'):
-@@ -1881,8 +1894,11 @@ def detect(conf):
+@@ -1881,8 +1898,9 @@ def detect(conf):
          conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
      elif platform in ('win32', 'x86_64-win32'):
          conf.env['LINKFLAGS_OPENGL'] = ['opengl32.lib', 'glu32.lib']
 -    elif platform in ('x86_64-linux','arm64-linux'):
-+    elif platform in ('x86_64-linux'):
++    elif platform in ('x86_64-linux', 'arm64-linux'):
          conf.env['LIB_OPENGL'] = ['GL', 'GLU']
-+    elif platform in ('arm64-linux'):
-+        print("<!> detect: GLES LINKFLAGS")
-+        conf.env['LIB_OPENGL'] = ['EGL', 'GLESv1_CM', 'GLESv2']
++        conf.env['LIB_OPENGLES'] = ['EGL', 'GLESv1_CM', 'GLESv2']
  
      if platform in ('x86_64-macos','arm64-macos'):
          conf.env['FRAMEWORK_OPENAL'] = ['OpenAL']
+@@ -1917,6 +1935,7 @@ def detect(conf):
+     conf.env['STLIB_RECORD_NULL'] = 'record_null'
+ 
+     conf.env['STLIB_GRAPHICS']          = ['graphics', 'graphics_transcoder_basisu', 'basis_transcoder']
++    conf.env['STLIB_GRAPHICS_OPENGLES'] = ['graphics_opengles', 'graphics_transcoder_basisu', 'basis_transcoder']
+     conf.env['STLIB_GRAPHICS_VULKAN']   = ['graphics_vulkan', 'graphics_transcoder_basisu', 'basis_transcoder']
+     conf.env['STLIB_GRAPHICS_WEBGPU']   = ['graphics_webgpu', 'graphics_transcoder_basisu', 'basis_transcoder']
+     conf.env['STLIB_GRAPHICS_NULL']     = ['graphics_null', 'graphics_transcoder_null']
 diff --git a/ci/ci.py b/ci/ci.py
 index 468b4ffeee..5d12f11abb 100644
 --- a/ci/ci.py
@@ -272,10 +290,10 @@ index 0000000000..dd537da329
 +    sh ${DIR}/copy_private.sh
 +fi
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
-index b215f403bb..3785dc5b99 100644
+index 8070a45a1d..871427b358 100644
 --- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
 +++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/Bob.java
-@@ -771,7 +771,7 @@ public class Bob {
+@@ -786,7 +786,7 @@ public class Bob {
          try {
              TimeProfiler.start("ParseCommandLine");
              if (cmd.hasOption("version")) {
@@ -284,21 +302,6 @@ index b215f403bb..3785dc5b99 100644
                  return new InvocationResult(true, Collections.emptyList());
              }
  
-diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
-index 6690b929c6..76960fe5b7 100644
---- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
-+++ b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/meta.properties
-@@ -282,6 +282,10 @@ use_thread.type = bool
- use_thread.help = enables sound threading
- use_thread.default = 1
- 
-+frame_count.type = integer
-+frame_count.help = number of sound frames to process in a single update, 0 to use the default value depending on the platform
-+frame_count.default = 0
-+
- [resource]
- help = Resource loading and management related settings
- http_cache.type = bool
 diff --git a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java b/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
 index e54b20a03e..e5e530045a 100644
 --- a/com.dynamo.cr/com.dynamo.cr.bob/src/com/dynamo/bob/pipeline/ShaderCompilers.java
@@ -340,21 +343,19 @@ index eb2ef1ae25..2709d6aee5 100644
          String finalShaderSource                 = shaderPreprocessor.getCompiledSource();
          IShaderCompiler shaderCompiler           = project.getShaderCompiler(platformKey);
          ShaderCompileResult shaderCompilerResult = shaderCompiler.compile(finalShaderSource, shaderType, resourceOutputPath, outputSpirv, outputWGSL);
-diff --git a/editor/resources/meta.edn b/editor/resources/meta.edn
-index 5ff8a3934f..d11c119b33 100644
---- a/editor/resources/meta.edn
-+++ b/editor/resources/meta.edn
-@@ -436,6 +436,10 @@
-    :help "Enables sound threading",
-    :default true,
-    :path ["sound" "use_thread"]}
-+  {:type :integer,
-+   :help "number of sound frames to process in a single update, 0 to use the default value depending on the platform",
-+   :default 0,
-+   :path ["sound" "frame_count"]}
-   {:type :integer,
-    :help "max number of sprites, 128 by default",
-    :default 128,
+diff --git a/editor/test/resources/test_project/app_manifest/vulkan.appmanifest b/editor/test/resources/test_project/app_manifest/vulkan.appmanifest
+index e1cb688935..8f3c6447de 100644
+--- a/editor/test/resources/test_project/app_manifest/vulkan.appmanifest
++++ b/editor/test/resources/test_project/app_manifest/vulkan.appmanifest
+@@ -31,7 +31,7 @@ platforms:
+     arm64-linux:
+         context:
+             excludeLibs: ["graphics"]
+-            excludeSymbols: ["GraphicsAdapterOpenGL"]
++            excludeSymbols: ["GraphicsAdapterOpenGLES"]
+             symbols: ["GraphicsAdapterVulkan"]
+             libs: ["graphics_vulkan","X11-xcb"]
+             dynamicLibs: ["vulkan"]
 diff --git a/engine/dlib/src/dlib/job_thread.cpp b/engine/dlib/src/dlib/job_thread.cpp
 index 887a9975ad..3fb865ad08 100644
 --- a/engine/dlib/src/dlib/job_thread.cpp
@@ -382,7 +383,7 @@ index 44fd94377f..a2faf09997 100644
      if not platform_supports_feature(bld.env.PLATFORM, name, {}):
          print ("Skipping test '%s' due to platform missing feature" % name)
 diff --git a/engine/dlib/wscript b/engine/dlib/wscript
-index a64c762f4a..80d6b51be9 100644
+index a64c762f4a..7220f5716f 100644
 --- a/engine/dlib/wscript
 +++ b/engine/dlib/wscript
 @@ -50,12 +50,25 @@ def build(bld):
@@ -391,7 +392,7 @@ index a64c762f4a..80d6b51be9 100644
  def shutdown(sht):
 +    import time
 +    print("<!> dlib: shutdown")
-+    time.sleep(5)
++    time.sleep(1)
 +
      if not TestContext.is_valid(test_context) or Options.options.skip_build_tests or Options.options.skip_tests:
 +        print("<!> dlib: skip tests: ", not TestContext.is_valid(test_context), Options.options.skip_build_tests, Options.options.skip_tests)
@@ -422,12 +423,12 @@ index a64c762f4a..80d6b51be9 100644
      # Postponing a fix until I've updated to Catalina on my machine as well
      # if not sys.platform in ('win32', 'darwin'):
 diff --git a/engine/engine/content/builtins/input/default.gamepads b/engine/engine/content/builtins/input/default.gamepads
-index ae74602695..d57ae8d85b 100644
+index 11b899312d..267a64e719 100644
 --- a/engine/engine/content/builtins/input/default.gamepads
 +++ b/engine/engine/content/builtins/input/default.gamepads
-@@ -5917,3 +5917,34 @@ driver {
-   map { input: GAMEPAD_GUIDE type: GAMEPAD_TYPE_BUTTON index: 12 }
-   map { input: GAMEPAD_RAW type: GAMEPAD_TYPE_AXIS index: 0 }
+@@ -6017,3 +6017,34 @@ driver
+     map { input: GAMEPAD_GUIDE type: GAMEPAD_TYPE_BUTTON index: 12 }
+     map { input: GAMEPAD_RAW type: GAMEPAD_TYPE_AXIS index: 0 }
  }
 +
 +driver
@@ -461,17 +462,42 @@ index ae74602695..d57ae8d85b 100644
 +    map { input: GAMEPAD_BACK type: GAMEPAD_TYPE_BUTTON index: 8 }
 +}
 diff --git a/engine/engine/src/engine.cpp b/engine/engine/src/engine.cpp
-index fd4e39ba67..8bef8a2ba7 100644
+index 3f4d32763c..80a6c0e1be 100644
 --- a/engine/engine/src/engine.cpp
 +++ b/engine/engine/src/engine.cpp
-@@ -1080,6 +1080,7 @@ namespace dmEngine
- #else
-         sound_params.m_UseThread = dmConfigFile::GetInt(engine->m_Config, "sound.use_thread", 1) != 0;
- #endif
-+        sound_params.m_FrameCount = dmConfigFile::GetInt(engine->m_Config, "sound.frame_count", 0);
-         dmSound::Result soundInit = dmSound::Initialize(engine->m_Config, &sound_params);
-         if (dmSound::RESULT_OK == soundInit) {
-             dmLogInfo("Initialised sound device '%s'", sound_params.m_OutputDevice);
+@@ -589,11 +589,12 @@ namespace dmEngine
+     {
+         switch(family)
+         {
+-            case dmGraphics::ADAPTER_FAMILY_NULL:   return dmPlatform::PLATFORM_GRAPHICS_API_NULL;
+-            case dmGraphics::ADAPTER_FAMILY_OPENGL: return dmPlatform::PLATFORM_GRAPHICS_API_OPENGL;
+-            case dmGraphics::ADAPTER_FAMILY_VULKAN: return dmPlatform::PLATFORM_GRAPHICS_API_VULKAN;
+-            case dmGraphics::ADAPTER_FAMILY_VENDOR: return dmPlatform::PLATFORM_GRAPHICS_API_VENDOR;
+-            case dmGraphics::ADAPTER_FAMILY_WEBGPU: return dmPlatform::PLATFORM_GRAPHICS_API_WEBGPU;
++            case dmGraphics::ADAPTER_FAMILY_NULL:     return dmPlatform::PLATFORM_GRAPHICS_API_NULL;
++            case dmGraphics::ADAPTER_FAMILY_OPENGL:   return dmPlatform::PLATFORM_GRAPHICS_API_OPENGL;
++            case dmGraphics::ADAPTER_FAMILY_OPENGLES: return dmPlatform::PLATFORM_GRAPHICS_API_OPENGLES;
++            case dmGraphics::ADAPTER_FAMILY_VULKAN:   return dmPlatform::PLATFORM_GRAPHICS_API_VULKAN;
++            case dmGraphics::ADAPTER_FAMILY_VENDOR:   return dmPlatform::PLATFORM_GRAPHICS_API_VENDOR;
++            case dmGraphics::ADAPTER_FAMILY_WEBGPU:   return dmPlatform::PLATFORM_GRAPHICS_API_WEBGPU;
+             default:break;
+         }
+         assert(0);
+diff --git a/engine/engine/src/wscript b/engine/engine/src/wscript
+index b67dbe7530..c8d22e462f 100755
+--- a/engine/engine/src/wscript
++++ b/engine/engine/src/wscript
+@@ -77,6 +77,10 @@ def build(bld):
+     graphics_lib = 'GRAPHICS DMGLFW OPENGL'
+     graphics_lib_symbols = ['GraphicsAdapterOpenGL']
+ 
++    if bld.env['PLATFORM'] in ('arm64-linux'):
++        graphics_lib = 'GRAPHICS_OPENGLES DMGLFW OPENGLES'
++        graphics_lib_symbols = ['GraphicsAdapterOpenGLES']
++
+     if waflib.Options.options.with_vulkan:
+         graphics_lib += ' GRAPHICS_VULKAN VULKAN'
+         graphics_lib_symbols.append('GraphicsAdapterVulkan')
 diff --git a/engine/engine/wscript b/engine/engine/wscript
 index e002b73190..8df493de05 100644
 --- a/engine/engine/wscript
@@ -489,68 +515,47 @@ index e002b73190..8df493de05 100644
  
          # For Vulkan
          if waflib.Options.options.with_vulkan:
-diff --git a/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw b/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
-index 20be336dcb..2e7895a1a6 100644
---- a/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
-+++ b/engine/gamesys/src/gamesys/test/http/test_http_timeout.lua.raw
-@@ -26,7 +26,7 @@ function test_http_timeout()
-     options['timeout'] = 1.0
- 
-     print("Failing http requests ahead ->")
--    http.request("http://127.0.0.1:" .. PORT .. "/sleep/1.5", "GET",
-+    http.request(ADDRESS .. "/sleep/1.5", "GET",
-         function(response)
-             assert(response.status == 0)
-             requests_left = requests_left - 1
-@@ -35,7 +35,7 @@ function test_http_timeout()
-     requests_left = requests_left + 1
- 
-     -- The config file also specifies a timeout value, let's test that too
--    http.request("http://127.0.0.1:" .. PORT .. "/sleep", "GET",
-+    http.request(ADDRESS .. "/sleep", "GET",
-         function(response)
-             assert(response.status == 0)
-             requests_left = requests_left - 1
-@@ -44,7 +44,7 @@ function test_http_timeout()
-     requests_left = requests_left + 1
- 
-     -- Also test one that succeeds, i.e. does not time out
--    http.request("http://127.0.0.1:" .. PORT .. "/sleep/0.5", "GET",
-+    http.request(ADDRESS .. "/sleep/0.5", "GET",
-         function(response)
-             assert(response.status == 200)
-             requests_left = requests_left - 1
-@@ -55,7 +55,7 @@ function test_http_timeout()
-     for i=1,10 do
- 
-         options['timeout'] = 1.0
--        http.request(string.format("http://127.0.0.1:" .. PORT .. "/sleep/1.10%d", i), "GET",
-+        http.request(string.format(ADDRESS .. "/sleep/1.10%d", i), "GET",
-             function(response)
-                 assert(response.status == 0) -- it should timeout
- 
 diff --git a/engine/gamesys/wscript b/engine/gamesys/wscript
-index ad03b4201c..82d91e6814 100644
+index ad03b4201c..fddc0a3fe7 100644
 --- a/engine/gamesys/wscript
 +++ b/engine/gamesys/wscript
-@@ -40,8 +40,11 @@ def configure(conf):
+@@ -40,8 +40,12 @@ def configure(conf):
          pass
      elif re.match('arm.*?android', platform):
          conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
 -    elif platform == "linux" or platform == "x86_64-linux":
+-        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
 +    elif platform == "x86_64-linux":
-         conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
++        print("<!> gamesys: GL LINKFLAGS")
++        # conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'GL', 'GLU']
 +    elif platform == "arm64-linux":
 +        print("<!> gamesys: GLES LINKFLAGS")
-+        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
++        # conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
      elif "win32" in platform:
          conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
  
 diff --git a/engine/graphics/src/graphics.cpp b/engine/graphics/src/graphics.cpp
-index 79e32f8bcb..773c8c4390 100644
+index 13a1b2f1a5..8a708dc78c 100644
 --- a/engine/graphics/src/graphics.cpp
 +++ b/engine/graphics/src/graphics.cpp
-@@ -318,9 +318,11 @@ namespace dmGraphics
+@@ -106,6 +106,8 @@ namespace dmGraphics
+             return ADAPTER_FAMILY_NULL;
+         if (dmStrCaseCmp("opengl", adapter_name) == 0)
+             return ADAPTER_FAMILY_OPENGL;
++        if (dmStrCaseCmp("opengles", adapter_name) == 0)
++            return ADAPTER_FAMILY_OPENGLES;
+         if (dmStrCaseCmp("vulkan", adapter_name) == 0)
+             return ADAPTER_FAMILY_VULKAN;
+         if (dmStrCaseCmp("webgpu", adapter_name) == 0)
+@@ -125,6 +127,7 @@ namespace dmGraphics
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_NONE);
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_NULL);
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_OPENGL);
++            GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_OPENGLES);
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_VULKAN);
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_VENDOR);
+             GRAPHICS_ENUM_TO_STR_CASE(ADAPTER_FAMILY_WEBGPU);
+@@ -318,9 +321,11 @@ namespace dmGraphics
          assert(shader_desc);
          ShaderDesc::Shader* selected_shader = 0x0;
  
@@ -562,6 +567,30 @@ index 79e32f8bcb..773c8c4390 100644
              if(IsShaderLanguageSupported(context, shader->m_Language, shader_desc->m_ShaderType))
              {
                  if (shader->m_VariantTextureArray)
+diff --git a/engine/graphics/src/graphics.h b/engine/graphics/src/graphics.h
+index d90b5da552..748c28582c 100644
+--- a/engine/graphics/src/graphics.h
++++ b/engine/graphics/src/graphics.h
+@@ -79,12 +79,13 @@ namespace dmGraphics
+ 
+     enum AdapterFamily
+     {
+-        ADAPTER_FAMILY_NONE   = -1,
+-        ADAPTER_FAMILY_NULL   = 1,
+-        ADAPTER_FAMILY_OPENGL = 2,
+-        ADAPTER_FAMILY_VULKAN = 3,
+-        ADAPTER_FAMILY_VENDOR = 4,
+-        ADAPTER_FAMILY_WEBGPU = 5,
++        ADAPTER_FAMILY_NONE     = -1,
++        ADAPTER_FAMILY_NULL     = 1,
++        ADAPTER_FAMILY_OPENGL   = 2,
++        ADAPTER_FAMILY_OPENGLES = 3,
++        ADAPTER_FAMILY_VULKAN   = 4,
++        ADAPTER_FAMILY_VENDOR   = 5,
++        ADAPTER_FAMILY_WEBGPU   = 6,
+     };
+ 
+     enum AssetType
 diff --git a/engine/graphics/src/null/graphics_null.cpp b/engine/graphics/src/null/graphics_null.cpp
 index 085954f44e..8c93ac342a 100644
 --- a/engine/graphics/src/null/graphics_null.cpp
@@ -582,293 +611,86 @@ index 085954f44e..8c93ac342a 100644
                  return language == ShaderDesc::LANGUAGE_GLSL_SM430 ||
                         language == ShaderDesc::LANGUAGE_SPIRV;
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index 916e47abff..b221ec9b01 100644
+index 5701284911..b79abf1212 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
-@@ -72,7 +72,7 @@
+@@ -71,9 +71,7 @@
+     #endif
  #endif
  
- #if defined(__linux__) && !defined(ANDROID)
+-#if defined(__linux__) && !defined(ANDROID)
 -    #include <GL/glext.h>
-+    // NOP
- #elif defined (ANDROID)
+-#elif defined (ANDROID)
++#if defined (ANDROID)
      #define GL_GLEXT_PROTOTYPES
      #include <GLES2/gl2ext.h>
-@@ -84,124 +84,7 @@
+ 
+@@ -83,6 +81,8 @@
+ 
  #elif defined (__MACH__)
      // NOP
++#elif defined (__linux__)
++    // NOP
  #elif defined (_WIN32)
--    #ifdef GL_GLEXT_PROTOTYPES
--        #undef GL_GLEXT_PROTOTYPES
--        #include "win32/glext.h"
--        #define GL_GLEXT_PROTOTYPES
--    #else
--        #include "win32/glext.h"
--    #endif
+     #ifdef GL_GLEXT_PROTOTYPES
+         #undef GL_GLEXT_PROTOTYPES
+@@ -411,10 +411,13 @@ static void LogFrameBufferError(GLenum status)
+     static bool                         OpenGLIsSupported();
+     static HContext                     OpenGLGetContext();
+     static int8_t          g_null_adapter_priority = 1;
+-    static GraphicsAdapter g_opengl_adapter(ADAPTER_FAMILY_OPENGL);
 -
--    // VBO Extension for OGL 1.4.1
--    typedef void (APIENTRY * PFNGLGENPROGRAMARBPROC) (GLenum, GLuint *);
--    typedef void (APIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum, GLuint);
--    typedef void (APIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei, const GLuint*);
--    typedef void (APIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum, GLenum, GLsizei, const GLvoid *);
--    typedef void (APIENTRY * PFNGLVERTEXPARAMFLOAT4ARBPROC) (GLenum, GLuint, GLfloat, GLfloat, GLfloat, GLfloat);
--    typedef void (APIENTRY * PFNGLVERTEXATTRIBSETPROC) (GLuint);
--    typedef void (APIENTRY * PFNGLVERTEXATTRIBPTRPROC) (GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid *);
--    typedef void (APIENTRY * PFNGLTEXPARAM2DPROC) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *);
--    typedef void (APIENTRY * PFNGLCOMPRTEXSUB2DPROC) (GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *);
--    typedef void (APIENTRY * PFNGLBINDBUFFERPROC) (GLenum, GLuint);
--    typedef void (APIENTRY * PFNGLBUFFERDATAPROC) (GLenum, GLsizeiptr, const GLvoid*, GLenum);
--    typedef void (APIENTRY * PFNGLBINDRENDERBUFFERPROC) (GLenum, GLuint);
--    typedef void (APIENTRY * PFNGLRENDERBUFFERSTORAGEPROC) (GLenum, GLenum, GLsizei, GLsizei);
--    typedef void (APIENTRY * PFNGLRENDERBUFFERTEXTURE2DPROC) (GLenum, GLenum, GLenum, GLuint, GLint);
--    typedef void (APIENTRY * PFNGLFRAMEBUFFERRENDERBUFFERPROC) (GLenum, GLenum, GLenum, GLuint);
--    typedef void (APIENTRY * PFNGLBINDFRAMEBUFFERPROC) (GLenum, GLuint);
--    typedef void (APIENTRY * PFNGLBUFFERSUBDATAPROC) (GLenum, GLintptr, GLsizeiptr, const GLvoid*);
--    typedef void* (APIENTRY * PFNGLMAPBUFFERPROC) (GLenum, GLenum);
--    typedef GLboolean (APIENTRY * PFNGLUNMAPBUFFERPROC) (GLenum);
--    typedef void (APIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum);
--    typedef void (APIENTRY * PFNGLSTENCILFUNCSEPARATEPROC) (GLenum, GLenum, GLint, GLuint);
--    typedef void (APIENTRY * PFNGLSTENCILOPSEPARATEPROC) (GLenum, GLenum, GLenum, GLenum);
--    typedef void (APIENTRY * PFNGLDRAWBUFFERSPROC) (GLsizei, const GLenum*);
--    typedef GLint (APIENTRY * PFNGLGETFRAGDATALOCATIONPROC) (GLuint, const char*);
--    typedef void (APIENTRY * PFNGLBINDFRAGDATALOCATIONPROC) (GLuint, GLuint, const char*);
++	#if defined(DM_GRAPHICS_USE_OPENGLES)
++	static GraphicsAdapter g_opengl_adapter(ADAPTER_FAMILY_OPENGLES);
++    DM_REGISTER_GRAPHICS_ADAPTER(GraphicsAdapterOpenGLES, &g_opengl_adapter, OpenGLIsSupported, OpenGLRegisterFunctionTable, OpenGLGetContext, g_null_adapter_priority);
++	#else
++	static GraphicsAdapter g_opengl_adapter(ADAPTER_FAMILY_OPENGL);
+     DM_REGISTER_GRAPHICS_ADAPTER(GraphicsAdapterOpenGL, &g_opengl_adapter, OpenGLIsSupported, OpenGLRegisterFunctionTable, OpenGLGetContext, g_null_adapter_priority);
 -
--    PFNGLGENPROGRAMARBPROC glGenProgramsARB = NULL;
--    PFNGLBINDPROGRAMARBPROC glBindProgramARB = NULL;
--    PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB = NULL;
--    PFNGLPROGRAMSTRINGARBPROC glProgramStringARB = NULL;
--    PFNGLVERTEXPARAMFLOAT4ARBPROC glProgramLocalParameter4fARB = NULL;
--    PFNGLVERTEXATTRIBSETPROC glEnableVertexAttribArray = NULL;
--    PFNGLVERTEXATTRIBSETPROC glDisableVertexAttribArray = NULL;
--    PFNGLVERTEXATTRIBPTRPROC glVertexAttribPointer = NULL;
--    PFNGLTEXPARAM2DPROC glCompressedTexImage2D = NULL;
--    PFNGLCOMPRTEXSUB2DPROC glCompressedTexSubImage2D = NULL;
--    PFNGLGENBUFFERSPROC glGenBuffersARB = NULL;
--    PFNGLDELETEBUFFERSPROC glDeleteBuffersARB = NULL;
--    PFNGLBINDBUFFERPROC glBindBufferARB = NULL;
--    PFNGLBUFFERDATAPROC glBufferDataARB = NULL;
--    PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers = NULL;
--    PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer = NULL;
--    PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage = NULL;
--    PFNGLRENDERBUFFERTEXTURE2DPROC glFramebufferTexture2D = NULL;
--    PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer = NULL;
--    PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers = NULL;
--    PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer = NULL;
--    PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers = NULL;
--    PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffers = NULL;
--    PFNGLBUFFERSUBDATAPROC glBufferSubDataARB = NULL;
--    PFNGLMAPBUFFERPROC glMapBufferARB = NULL;
--    PFNGLUNMAPBUFFERPROC glUnmapBufferARB = NULL;
--    PFNGLACTIVETEXTUREPROC glActiveTexture = NULL;
--    PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus = NULL;
--    PFNGLSTENCILFUNCSEPARATEPROC glStencilFuncSeparate = NULL;
--    PFNGLSTENCILOPSEPARATEPROC glStencilOpSeparate = NULL;
--
--    PFNGLGETACTIVEATTRIBPROC glGetActiveAttrib = NULL;
--    PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = NULL;
--    PFNGLCREATESHADERPROC glCreateShader = NULL;
--    PFNGLSHADERSOURCEPROC glShaderSource = NULL;
--    PFNGLCOMPILESHADERPROC glCompileShader = NULL;
--    PFNGLGETSHADERIVPROC glGetShaderiv = NULL;
--    PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = NULL;
--    PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = NULL;
--    PFNGLDELETESHADERPROC glDeleteShader = NULL;
--    PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
--    PFNGLATTACHSHADERPROC glAttachShader = NULL;
--    PFNGLLINKPROGRAMPROC glLinkProgram = NULL;
--    PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
--    PFNGLUSEPROGRAMPROC glUseProgram = NULL;
--    PFNGLGETPROGRAMIVPROC glGetProgramiv = NULL;
--    PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform = NULL;
--    PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
--    PFNGLUNIFORM4FVPROC glUniform4fv = NULL;
--    PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = NULL;
--    PFNGLUNIFORM1IPROC glUniform1i = NULL;
--
--    PFNGLTEXSUBIMAGE3DPROC           glTexSubImage3D = NULL;
--    PFNGLTEXIMAGE3DPROC              glTexImage3D = NULL;
--    PFNGLCOMPRESSEDTEXIMAGE3DPROC    glCompressedTexImage3D = NULL;
--    PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC glCompressedTexSubImage3D = NULL;
--
--    // Compute
--    PFNGLDISPATCHCOMPUTEPROC  glDispatchCompute  = NULL;
--    PFNGLMEMORYBARRIERPROC    glMemoryBarrier    = NULL;
--    PFNGLBINDIMAGETEXTUREPROC glBindImageTexture = NULL;
--
--    // Uniform buffer objects
--    PFNGLBINDBUFFERBASEPROC          glBindBufferBase          = NULL;
--    PFNGLBUFFERDATAPROC              glBufferData              = NULL;
--    PFNGLGETUNIFORMBLOCKINDEXPROC    glGetUniformBlockIndex    = NULL;
--    PFNGLGETACTIVEUNIFORMBLOCKIVPROC glGetActiveUniformBlockiv = NULL;
--    PFNGLGETACTIVEUNIFORMSIVPROC     glGetActiveUniformsiv     = NULL;
--    PFNGLGENBUFFERSPROC              glGenBuffers              = NULL;
--    PFNGLBINDBUFFERPROC              glBindBuffer              = NULL;
--    PFNGLUNIFORMBLOCKBINDINGPROC     glUniformBlockBinding     = NULL;
--
--    #if !defined(GL_ES_VERSION_2_0)
--        PFNGLGETSTRINGIPROC glGetStringi = NULL;
--        PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
--        PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
--        PFNGLDRAWBUFFERSPROC glDrawBuffers = NULL;
--        PFNGLGETFRAGDATALOCATIONPROC glGetFragDataLocation = NULL;
--        PFNGLBINDFRAGDATALOCATIONPROC glBindFragDataLocation = NULL;
--        PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced = NULL;
--        PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = NULL;
--        PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = NULL;
--    #endif
-+    // #include <angle_gl.h>
- #elif defined(__EMSCRIPTEN__)
-     #include <GL/glext.h>
-     #if defined GL_ES_VERSION_2_0
-@@ -967,113 +850,10 @@ static void LogFrameBufferError(GLenum status)
-         assert(_context);
-         OpenGLContext* context = (OpenGLContext*) _context;
++    #endif
+     static void PostDeleteTextures(OpenGLContext*, bool);
+     static bool OpenGLInitialize(HContext context, const ContextParams& params);
  
--#if defined (_WIN32)
--    #define GET_PROC_ADDRESS_OPTIONAL(function, name, type) \
--        function = (type)wglGetProcAddress(name);\
--        if (function == 0x0)\
--        {\
--            function = (type)wglGetProcAddress(name "ARB");\
--        }\
--        if (function == 0x0)\
--        {\
--            function = (type)wglGetProcAddress(name "EXT");\
--        }
--
--    #define GET_PROC_ADDRESS(function, name, type)\
--        GET_PROC_ADDRESS_OPTIONAL(function, name, type) \
--        if (function == 0x0)\
--        {\
--            dmLogError("Could not find gl function '%s'.", name);\
--            return false;\
--        }
--
--        GET_PROC_ADDRESS(glGenProgramsARB, "glGenPrograms", PFNGLGENPROGRAMARBPROC);
--        GET_PROC_ADDRESS(glBindProgramARB, "glBindProgram", PFNGLBINDPROGRAMARBPROC);
--        GET_PROC_ADDRESS(glDeleteProgramsARB, "glDeletePrograms", PFNGLDELETEPROGRAMSARBPROC);
--        GET_PROC_ADDRESS(glProgramStringARB, "glProgramString", PFNGLPROGRAMSTRINGARBPROC);
--        GET_PROC_ADDRESS(glProgramLocalParameter4fARB, "glProgramLocalParameter4f", PFNGLVERTEXPARAMFLOAT4ARBPROC);
--        GET_PROC_ADDRESS(glEnableVertexAttribArray, "glEnableVertexAttribArray", PFNGLVERTEXATTRIBSETPROC);
--        GET_PROC_ADDRESS(glDisableVertexAttribArray, "glDisableVertexAttribArray", PFNGLVERTEXATTRIBSETPROC);
--        GET_PROC_ADDRESS(glVertexAttribPointer, "glVertexAttribPointer", PFNGLVERTEXATTRIBPTRPROC);
--        GET_PROC_ADDRESS(glCompressedTexImage2D, "glCompressedTexImage2D", PFNGLTEXPARAM2DPROC);
--        GET_PROC_ADDRESS(glCompressedTexSubImage2D, "glCompressedTexSubImage2D", PFNGLCOMPRTEXSUB2DPROC);
--        GET_PROC_ADDRESS(glGenBuffersARB, "glGenBuffers", PFNGLGENBUFFERSPROC);
--        GET_PROC_ADDRESS(glDeleteBuffersARB, "glDeleteBuffers", PFNGLDELETEBUFFERSPROC);
--        GET_PROC_ADDRESS(glBindBufferARB, "glBindBuffer", PFNGLBINDBUFFERPROC);
--        GET_PROC_ADDRESS(glBufferDataARB, "glBufferData", PFNGLBUFFERDATAPROC);
--        GET_PROC_ADDRESS(glGenRenderbuffers, "glGenRenderbuffers", PFNGLGENRENDERBUFFERSPROC);
--        GET_PROC_ADDRESS(glBindRenderbuffer, "glBindRenderbuffer", PFNGLBINDRENDERBUFFERPROC);
--        GET_PROC_ADDRESS(glRenderbufferStorage, "glRenderbufferStorage", PFNGLRENDERBUFFERSTORAGEPROC);
--        GET_PROC_ADDRESS(glFramebufferTexture2D, "glFramebufferTexture2D", PFNGLRENDERBUFFERTEXTURE2DPROC);
--        GET_PROC_ADDRESS(glFramebufferRenderbuffer, "glFramebufferRenderbuffer", PFNGLFRAMEBUFFERRENDERBUFFERPROC);
--        GET_PROC_ADDRESS(glGenFramebuffers, "glGenFramebuffers", PFNGLGENFRAMEBUFFERSPROC);
--        GET_PROC_ADDRESS(glBindFramebuffer, "glBindFramebuffer", PFNGLBINDFRAMEBUFFERPROC);
--        GET_PROC_ADDRESS(glDeleteFramebuffers, "glDeleteFramebuffers", PFNGLDELETEFRAMEBUFFERSPROC);
--        GET_PROC_ADDRESS(glDeleteRenderbuffers, "glDeleteRenderbuffers", PFNGLDELETERENDERBUFFERSPROC);
--        GET_PROC_ADDRESS(glBufferSubDataARB, "glBufferSubData", PFNGLBUFFERSUBDATAPROC);
--        GET_PROC_ADDRESS(glMapBufferARB, "glMapBuffer", PFNGLMAPBUFFERPROC);
--        GET_PROC_ADDRESS(glUnmapBufferARB, "glUnmapBuffer", PFNGLUNMAPBUFFERPROC);
--        GET_PROC_ADDRESS(glActiveTexture, "glActiveTexture", PFNGLACTIVETEXTUREPROC);
--        GET_PROC_ADDRESS(glCheckFramebufferStatus, "glCheckFramebufferStatus", PFNGLCHECKFRAMEBUFFERSTATUSPROC);
--        GET_PROC_ADDRESS(glGetAttribLocation, "glGetAttribLocation", PFNGLGETATTRIBLOCATIONPROC);
--        GET_PROC_ADDRESS(glGetActiveAttrib, "glGetActiveAttrib", PFNGLGETACTIVEATTRIBPROC);
--        GET_PROC_ADDRESS(glCreateShader, "glCreateShader", PFNGLCREATESHADERPROC);
--        GET_PROC_ADDRESS(glShaderSource, "glShaderSource", PFNGLSHADERSOURCEPROC);
--        GET_PROC_ADDRESS(glCompileShader, "glCompileShader", PFNGLCOMPILESHADERPROC);
--        GET_PROC_ADDRESS(glGetShaderiv, "glGetShaderiv", PFNGLGETSHADERIVPROC);
--        GET_PROC_ADDRESS(glGetShaderInfoLog, "glGetShaderInfoLog", PFNGLGETSHADERINFOLOGPROC);
--        GET_PROC_ADDRESS(glGetProgramInfoLog, "glGetProgramInfoLog", PFNGLGETPROGRAMINFOLOGPROC);
--        GET_PROC_ADDRESS(glDeleteShader, "glDeleteShader", PFNGLDELETESHADERPROC);
--        GET_PROC_ADDRESS(glCreateProgram, "glCreateProgram", PFNGLCREATEPROGRAMPROC);
--        GET_PROC_ADDRESS(glAttachShader, "glAttachShader", PFNGLATTACHSHADERPROC);
--        GET_PROC_ADDRESS(glLinkProgram, "glLinkProgram", PFNGLLINKPROGRAMPROC);
--        GET_PROC_ADDRESS(glDeleteProgram, "glDeleteProgram", PFNGLDELETEPROGRAMPROC);
--        GET_PROC_ADDRESS(glUseProgram, "glUseProgram", PFNGLUSEPROGRAMPROC);
--        GET_PROC_ADDRESS(glGetProgramiv, "glGetProgramiv", PFNGLGETPROGRAMIVPROC);
--        GET_PROC_ADDRESS(glGetActiveUniform, "glGetActiveUniform", PFNGLGETACTIVEUNIFORMPROC);
--        GET_PROC_ADDRESS(glGetUniformLocation, "glGetUniformLocation", PFNGLGETUNIFORMLOCATIONPROC);
--        GET_PROC_ADDRESS(glUniform4fv, "glUniform4fv", PFNGLUNIFORM4FVPROC);
--        GET_PROC_ADDRESS(glUniformMatrix4fv, "glUniformMatrix4fv", PFNGLUNIFORMMATRIX4FVPROC);
--        GET_PROC_ADDRESS(glUniform1i, "glUniform1i", PFNGLUNIFORM1IPROC);
--        GET_PROC_ADDRESS(glStencilOpSeparate, "glStencilOpSeparate", PFNGLSTENCILOPSEPARATEPROC);
--        GET_PROC_ADDRESS(glStencilFuncSeparate, "glStencilFuncSeparate", PFNGLSTENCILFUNCSEPARATEPROC);
--        GET_PROC_ADDRESS(glTexSubImage3D, "glTexSubImage3D", PFNGLTEXSUBIMAGE3DPROC);
--        GET_PROC_ADDRESS(glTexImage3D, "glTexImage3D", PFNGLTEXIMAGE3DPROC);
--        GET_PROC_ADDRESS(glCompressedTexImage3D, "glCompressedTexImage3D", PFNGLCOMPRESSEDTEXIMAGE3DPROC);
--        GET_PROC_ADDRESS(glCompressedTexSubImage3D, "glCompressedTexSubImage3D", PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC);
--
--        GET_PROC_ADDRESS_OPTIONAL(glDispatchCompute,  "glDispatchCompute",  PFNGLDISPATCHCOMPUTEPROC);
--        GET_PROC_ADDRESS_OPTIONAL(glMemoryBarrier,    "glMemoryBarrier",    PFNGLMEMORYBARRIERPROC);
--        GET_PROC_ADDRESS_OPTIONAL(glBindImageTexture, "glBindImageTexture", PFNGLBINDIMAGETEXTUREPROC);
--
--        GET_PROC_ADDRESS(glBindBufferBase, "glBindBufferBase", PFNGLBINDBUFFERBASEPROC);
--        GET_PROC_ADDRESS(glBufferData, "glBufferData", PFNGLBUFFERDATAPROC);
--        GET_PROC_ADDRESS(glGetUniformBlockIndex, "glGetUniformBlockIndex", PFNGLGETUNIFORMBLOCKINDEXPROC);
--        GET_PROC_ADDRESS(glGetActiveUniformBlockiv, "glGetActiveUniformBlockiv", PFNGLGETACTIVEUNIFORMBLOCKIVPROC);
--        GET_PROC_ADDRESS(glGetActiveUniformsiv, "glGetActiveUniformsiv", PFNGLGETACTIVEUNIFORMSIVPROC);
--        GET_PROC_ADDRESS(glGenBuffers, "glGenBuffers", PFNGLGENBUFFERSPROC);
--        GET_PROC_ADDRESS(glBindBuffer, "glBindBuffer", PFNGLBINDBUFFERPROC);
--        GET_PROC_ADDRESS(glUniformBlockBinding, "glUniformBlockBinding", PFNGLUNIFORMBLOCKBINDINGPROC);
--
--    #if !defined(GL_ES_VERSION_2_0)
--        GET_PROC_ADDRESS(glGetStringi,"glGetStringi",PFNGLGETSTRINGIPROC);
--        GET_PROC_ADDRESS(glGenVertexArrays, "glGenVertexArrays", PFNGLGENVERTEXARRAYSPROC);
--        GET_PROC_ADDRESS(glBindVertexArray, "glBindVertexArray", PFNGLBINDVERTEXARRAYPROC);
--        GET_PROC_ADDRESS(glDrawBuffers, "glDrawBuffers", PFNGLDRAWBUFFERSPROC);
--        GET_PROC_ADDRESS(glGetFragDataLocation, "glGetFragDataLocation", PFNGLGETFRAGDATALOCATIONPROC);
--        GET_PROC_ADDRESS(glBindFragDataLocation, "glBindFragDataLocation", PFNGLBINDFRAGDATALOCATIONPROC);
--        GET_PROC_ADDRESS(glDrawArraysInstanced, "glDrawArraysInstanced", PFNGLDRAWARRAYSINSTANCEDPROC);
--        GET_PROC_ADDRESS(glDrawElementsInstanced, "glDrawElementsInstanced", PFNGLDRAWELEMENTSINSTANCEDPROC);
--        GET_PROC_ADDRESS(glVertexAttribDivisor, "glVertexAttribDivisor", PFNGLVERTEXATTRIBDIVISORPROC);
--    #endif
--
--    #undef GET_PROC_ADDRESS
--#endif
--
+@@ -941,7 +944,11 @@ static void LogFrameBufferError(GLenum status)
+ 
+     static void OpenGLPrintDeviceInfo(HContext context)
+     {
++        #if defined(DM_GRAPHICS_USE_OPENGLES)
++        dmLogInfo("Device: OpenGL ES");
++        #else
+         dmLogInfo("Device: OpenGL");
++        #endif
+         dmLogInfo("Renderer: %s", (char *) glGetString(GL_RENDERER));
+         dmLogInfo("Version: %s", (char *) glGetString(GL_VERSION));
+         dmLogInfo("Vendor: %s", (char *) glGetString(GL_VENDOR));
+@@ -1073,7 +1080,7 @@ static void LogFrameBufferError(GLenum status)
          context->m_IsGles3Version = 1; // 0 == gles 2, 1 == gles 3
          context->m_PipelineState  = GetDefaultPipelineState();
  
 -#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || (defined(__linux__) && defined(__aarch64__))
++#if defined(__EMSCRIPTEN__) || defined(__ANDROID__) || defined(DM_GRAPHICS_USE_OPENGLES)
          context->m_IsShaderLanguageGles = 1;
  
          const char* version = (char *) glGetString(GL_VERSION);
-@@ -1443,7 +1223,8 @@ static void LogFrameBufferError(GLenum status)
+@@ -1147,7 +1154,6 @@ static void LogFrameBufferError(GLenum status)
+             (void) SetFrontProcess( &psn );
+ #endif
+ 
+-
+     #if !(defined(__EMSCRIPTEN__) || defined(GL_ES_VERSION_2_0))
+         GLint n;
+         glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+@@ -1443,7 +1449,7 @@ static void LogFrameBufferError(GLenum status)
          #endif
          }
  
 -#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__)
-+#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__) || (defined(__linux__) && defined(__aarch64__))
-+        dmLogInfo("<!> test OpenGLIsExtensionSupported(context, \"GL_OES_element_index_uint\")");
++#if defined(__ANDROID__) || defined(__arm__) || defined(__arm64__) || defined(__EMSCRIPTEN__) || defined(DM_GRAPHICS_USE_OPENGLES)
          if (OpenGLIsExtensionSupported(context, "GL_OES_element_index_uint") ||
              OpenGLIsExtensionSupported(context, "OES_element_index_uint"))
          {
-@@ -1486,10 +1267,10 @@ static void LogFrameBufferError(GLenum status)
-         #undef COMPUTE_VERSION_NEEDED
-     #endif
- 
--        if (context->m_PrintDeviceInfo)
--        {
-+        // if (context->m_PrintDeviceInfo)
-+        // {
-             OpenGLPrintDeviceInfo(context);
--        }
-+        // }
- 
-         context->m_AsyncProcessingSupport = dmThread::PlatformHasThreadSupport() && dmPlatform::GetWindowStateParam(context->m_Window, dmPlatform::WINDOW_STATE_AUX_CONTEXT);
-         if (context->m_AsyncProcessingSupport)
-@@ -2918,6 +2699,7 @@ static void LogFrameBufferError(GLenum status)
-     {
-         OpenGLContext* context = (OpenGLContext*) _context;
- 
-+        dmLogInfo("<!> OpenGLIsShaderLanguageSupported, context is shader gles %d, context is gles3 %d, requested language %d", context->m_IsShaderLanguageGles, context->m_IsGles3Version, language);
-         if (context->m_IsShaderLanguageGles) // 0 == glsl, 1 == gles
-         {
-             if (context->m_IsGles3Version)
 diff --git a/engine/graphics/src/opengl/graphics_opengl_defines.h b/engine/graphics/src/opengl/graphics_opengl_defines.h
-index dfde827c3a..326238979b 100644
+index dfde827c3a..3fe45e5bab 100644
 --- a/engine/graphics/src/opengl/graphics_opengl_defines.h
 +++ b/engine/graphics/src/opengl/graphics_opengl_defines.h
 @@ -17,10 +17,17 @@
@@ -889,52 +711,107 @@ index dfde827c3a..326238979b 100644
  
  #elif defined (__MACH__)
  
-@@ -36,12 +43,16 @@
- #define GL_HAS_RENDERDOC_SUPPORT
- #include <dlib/safe_windows.h>
- #include <stdlib.h>
--#include <GL/gl.h>
--#include <GL/glu.h>
--#include <win32/glut.h>
+diff --git a/engine/graphics/src/test/test_app_graphics.cpp b/engine/graphics/src/test/test_app_graphics.cpp
+index debcab564b..927e18a43d 100644
+--- a/engine/graphics/src/test/test_app_graphics.cpp
++++ b/engine/graphics/src/test/test_app_graphics.cpp
+@@ -378,6 +378,10 @@ static void* EngineCreate(int argc, char** argv)
+     {
+         window_params.m_GraphicsApi = dmPlatform::PLATFORM_GRAPHICS_API_OPENGL;
+     }
++    else if (dmGraphics::GetInstalledAdapterFamily() == dmGraphics::ADAPTER_FAMILY_OPENGLES)
++    {
++        window_params.m_GraphicsApi = dmPlatform::PLATFORM_GRAPHICS_API_OPENGLES;
++    }
  
--#include "win32/glext.h"
--#include "win32/glcorearb.h"
-+#define GL_GLEXT_PROTOTYPES
-+#include <angle_gl.h>
-+#define GL_BGRA GL_BGRA_EXT
-+// #include <GL/gl.h>
-+// #include <GL/glu.h>
-+// #include <win32/glut.h>
+     dmPlatform::OpenWindow(engine->m_Window, window_params);
+     dmPlatform::ShowWindow(engine->m_Window);
+diff --git a/engine/graphics/src/test/wscript b/engine/graphics/src/test/wscript
+index 95c505e40e..4bdad53a13 100755
+--- a/engine/graphics/src/test/wscript
++++ b/engine/graphics/src/test/wscript
+@@ -22,6 +22,10 @@ def build(bld):
+         glfw_lib = ['DMGLFW']
+         glfw_js = '%s/ext/lib/%s/js/library_glfw.js' % (bld.env.DYNAMO_HOME, bld.env.PLATFORM)
+ 
++        if platform_supports_feature(bld.env.PLATFORM, 'opengles', {}):
++            graphics_libs = ['GRAPHICS_OPENGLES', 'graphics_transcoder_basisu']
++            extra_symbols = ['GraphicsAdapterOpenGLES']
 +
-+// #include "win32/glext.h"
-+// #include "win32/glcorearb.h"
+         if bld.env.PLATFORM in ('armv7-android', 'arm64-android'):
+             extra_libs += ['OPENGL']
  
- #elif defined (ANDROID)
- #define GL_GLEXT_PROTOTYPES
+diff --git a/engine/graphics/src/wscript b/engine/graphics/src/wscript
+index 70e16b6230..8aacf55561 100755
+--- a/engine/graphics/src/wscript
++++ b/engine/graphics/src/wscript
+@@ -56,23 +56,31 @@ def build(bld):
+ 
+     obj.source = [x for x in obj.source if not x.name.endswith('graphics_glfw_wrappers.cpp')]
+ 
+-    if platform_supports_feature(bld.env.PLATFORM, 'opengl', {}):
+-
+-        opengl_defines = []
+-        opengl_platform_includes = []
+-
+-        if platform_supports_feature(bld.env.PLATFORM, 'opengl_compute', {}):
+-            opengl_defines = ['DM_HAVE_PLATFORM_COMPUTE_SUPPORT']
+-
+-        if bld.env.PLATFORM in ('x86_64-win32', 'win32'):
+-            opengl_platform_includes = ['opengl/win32']
+-
+-        obj = bld.stlib(features        = 'cxx',
+-                        includes        = ['.', 'opengl'] + proto_cpp_includes + opengl_platform_includes,
+-                        source          = bld.path.ant_glob(['*.cpp', 'opengl/*.cpp']) + proto_cpp_source,
+-                        use             = 'DDF DLIB',
+-                        defines         = opengl_defines,
+-                        target          = 'graphics')
++    for graphics_feature in ['opengl', 'opengles']:
++        if platform_supports_feature(bld.env.PLATFORM, graphics_feature, {}):
++            opengl_target = 'graphics'
++            opengl_defines = ['DM_GRAPHICS_USE_OPENGL']
++            opengl_platform_includes = []
++
++            if graphics_feature == 'opengles':
++                opengl_target = 'graphics_opengles'
++                print("<!> DM_GRAPHICS_USE_OPENGLES")
++                import time
++                time.sleep(1)
++                opengl_defines = ['DM_GRAPHICS_USE_OPENGLES']
++
++            if platform_supports_feature(bld.env.PLATFORM, 'opengl_compute', {}):
++                opengl_defines.append('DM_HAVE_PLATFORM_COMPUTE_SUPPORT')
++
++            if bld.env.PLATFORM in ('x86_64-win32', 'win32'):
++                opengl_platform_includes = ['opengl/win32']
++
++            obj = bld.stlib(features        = 'cxx',
++                            includes        = ['.', 'opengl'] + proto_cpp_includes + opengl_platform_includes,
++                            source          = bld.path.ant_glob(['*.cpp', 'opengl/*.cpp']) + proto_cpp_source,
++                            use             = 'DDF DLIB',
++                            defines         = opengl_defines,
++                            target          = opengl_target)
+ 
+     if platform_supports_feature(bld.env.PLATFORM, 'webgpu', {}):
+         obj = bld.stlib(features        = 'cxx',
 diff --git a/engine/graphics/wscript b/engine/graphics/wscript
-index 3b8d2ca070..45e9e950af 100644
+index 3b8d2ca070..bcd9315a68 100644
 --- a/engine/graphics/wscript
 +++ b/engine/graphics/wscript
-@@ -52,10 +52,17 @@ def configure(conf):
+@@ -52,8 +52,12 @@ def configure(conf):
          conf.env.append_value('LINKFLAGS', ['-framework', 'Carbon', '-framework', 'OpenGL', '-framework', 'AGL', '-framework', 'IOKit', '-framework', 'CoreVideo'])
      elif platform == "x86_64-ios":
          pass
 -    elif platform in ["x86_64-linux", "arm64-linux"]:
 +    elif platform == "x86_64-linux":
++        print("<!> graphics: GL LINKFLAGS")
          conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lGL', '-lGLU', '-lpthread'])
 +    elif platform == "arm64-linux":
 +        print("<!> graphics: GLES LINKFLAGS")
 +        conf.env.append_value('LINKFLAGS', ['-lXext', '-lX11', '-lXi', '-lEGL', '-lGLESv1_CM', '-lGLESv2', '-lpthread'])
      elif "win32" in platform:
--        conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
-+        print("<!> graphics: ANGLE LIBPATH AND INCLUDES")
-+        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib'])
-+        # conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
-+        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
-+        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
+         conf.env.append_value('LINKFLAGS', ['opengl32.lib'])
  
-     conf.env.append_value('INCLUDES', "../src")
-     conf.env.append_value('INCLUDES', os.path.join(dynamo_ext, "include"))
 diff --git a/engine/gui/wscript b/engine/gui/wscript
 index bd80fa2574..e18c5f8494 100644
 --- a/engine/gui/wscript
@@ -964,8 +841,59 @@ index 3338d746ad..a56ea9244e 100644
          dmStrlCpy(name, device_name, MAX_GAMEPAD_NAME_LENGTH);
      }
  
+diff --git a/engine/hid/src/test/wscript b/engine/hid/src/test/wscript
+index b8ea5561fe..19e1115d0e 100644
+--- a/engine/hid/src/test/wscript
++++ b/engine/hid/src/test/wscript
+@@ -31,6 +31,12 @@ def build(bld):
+         graphics_lib += ['OPENGL']
+         graphics_lib_symbols += ['GraphicsAdapterOpenGL']
+ 
++    if platform_supports_feature(bld.env.PLATFORM, 'opengles', {}):
++        platform_lib = ['PLATFORM']
++        graphics_lib = ['GRAPHICS_OPENGLES', 'DMGLFW']
++        graphics_lib += ['OPENGLES']
++        graphics_lib_symbols += ['GraphicsAdapterOpenGLES']
++
+     if platform_supports_feature(bld.env.PLATFORM, 'vulkan', {}) and Options.options.with_vulkan:
+         graphics_lib_symbols += ['GraphicsAdapterVulkan']
+         graphics_lib += ['GRAPHICS_VULKAN', 'VULKAN']
+diff --git a/engine/platform/src/platform_window.h b/engine/platform/src/platform_window.h
+index 5bb82224c5..505a5d12c1 100644
+--- a/engine/platform/src/platform_window.h
++++ b/engine/platform/src/platform_window.h
+@@ -41,11 +41,12 @@ namespace dmPlatform
+ 
+     enum PlatformGraphicsApi
+     {
+-        PLATFORM_GRAPHICS_API_NULL   = 0,
+-        PLATFORM_GRAPHICS_API_OPENGL = 1,
+-        PLATFORM_GRAPHICS_API_VULKAN = 2,
+-        PLATFORM_GRAPHICS_API_VENDOR = 3,
+-        PLATFORM_GRAPHICS_API_WEBGPU = 4,
++        PLATFORM_GRAPHICS_API_NULL     = 0,
++        PLATFORM_GRAPHICS_API_OPENGL   = 1,
++        PLATFORM_GRAPHICS_API_OPENGLES = 2,
++        PLATFORM_GRAPHICS_API_VULKAN   = 2,
++        PLATFORM_GRAPHICS_API_VENDOR   = 3,
++        PLATFORM_GRAPHICS_API_WEBGPU   = 4,
+     };
+ 
+     enum DeviceState
+diff --git a/engine/platform/src/platform_window_glfw.cpp b/engine/platform/src/platform_window_glfw.cpp
+index fe92d1744f..084cca4e49 100644
+--- a/engine/platform/src/platform_window_glfw.cpp
++++ b/engine/platform/src/platform_window_glfw.cpp
+@@ -276,6 +276,7 @@ namespace dmPlatform
+         switch(params.m_GraphicsApi)
+         {
+             case PLATFORM_GRAPHICS_API_OPENGL:
++            case PLATFORM_GRAPHICS_API_OPENGLES:
+                 res = OpenWindowOpenGL(window, params);
+                 break;
+             case PLATFORM_GRAPHICS_API_WEBGPU:
 diff --git a/engine/platform/src/platform_window_glfw3.cpp b/engine/platform/src/platform_window_glfw3.cpp
-index 673399f73f..3ba696731b 100644
+index 33f5d33201..39d96e5e61 100644
 --- a/engine/platform/src/platform_window_glfw3.cpp
 +++ b/engine/platform/src/platform_window_glfw3.cpp
 @@ -43,7 +43,7 @@ namespace dmPlatform
@@ -977,7 +905,7 @@ index 673399f73f..3ba696731b 100644
      }
  
      static void OnWindowResize(GLFWwindow* glfw_window, int width, int height)
-@@ -142,26 +142,35 @@ namespace dmPlatform
+@@ -142,26 +142,37 @@ namespace dmPlatform
  
      HWindow NewWindow()
      {
@@ -995,7 +923,9 @@ index 673399f73f..3ba696731b 100644
 +        if (glfwInit() == GL_FALSE)
 +        {
 +            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
++            // TEMPORARY HACK
 +            glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
++            //
 +            if (glfwInit() == GL_FALSE)
 +            {
 +                dmLogError("Could not initialize glfw.");
@@ -1018,64 +948,105 @@ index 673399f73f..3ba696731b 100644
          // Reset context
          memset(&g_GLFW3Context, 0, sizeof(PlatformContext));
  
-@@ -181,6 +190,23 @@ namespace dmPlatform
+@@ -181,46 +192,58 @@ namespace dmPlatform
  
      static PlatformResult OpenWindowOpenGL(dmWindow* wnd, const WindowParams& params)
      {
+-        uint32_t major = 3, minor = 3;
+-        if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
+-        {
+-            dmLogWarning("OpenGL version hint %d is not supported. Using default version (%d.%d)",
+-                params.m_OpenGLVersionHint, major, minor);
+-        }
 +        glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
-+
+ 
+-        bool use_highest_version = major == 0 && minor == 0;
+-        if (!use_highest_version)
 +        GLFWmonitor* fullscreen_monitor = NULL;
 +        if (params.m_Fullscreen)
-+        {
-+            fullscreen_monitor = glfwGetPrimaryMonitor();
-+        }
-+
-+    #if defined(__linux__) && defined(__aarch64__) && !defined(ANDROID)
-+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-+        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-+
-+        dmLogInfo("<!> glfwCreateWindow with params: w %d h %d title %s", params.m_Width, params.m_Height, params.m_Title);
-+        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
-+    #else
-         uint32_t major = 3, minor = 3;
-         if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
          {
-@@ -211,15 +237,8 @@ namespace dmPlatform
-             }
+-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
+-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
++            fullscreen_monitor = glfwGetPrimaryMonitor();
          }
  
+-        if (params.m_OpenGLUseCoreProfileHint)
++        if (params.m_GraphicsApi == PLATFORM_GRAPHICS_API_OPENGLES)
+         {
+-            bool can_set_profile_and_fc = true;
++            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
++            glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
++            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
++            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+ 
+-        #ifdef _WIN32
+-            // Not supported on windows when requesting the default OpenGL version (which will equate to the highest available)
+-            can_set_profile_and_fc = !use_highest_version;
+-        #endif
++            wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
++        }
++        else
++        {
++            uint32_t major = 3, minor = 3;
++            if (!OpenGLGetVersion(params.m_OpenGLVersionHint, &major, &minor))
++            {
++                dmLogWarning("OpenGL version hint %d is not supported. Using default version (%d.%d)",
++                    params.m_OpenGLVersionHint, major, minor);
++            }
+ 
+-            if (can_set_profile_and_fc)
++            bool use_highest_version = major == 0 && minor == 0;
++            if (!use_highest_version)
+             {
+-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+-                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
++                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
++                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
+             }
+-        }
+ 
 -        glfwWindowHint(GLFW_SAMPLES, params.m_Samples);
--
++            if (params.m_OpenGLUseCoreProfileHint)
++            {
++                bool can_set_profile_and_fc = true;
++
++            #ifdef _WIN32
++                // Not supported on windows when requesting the default OpenGL version (which will equate to the highest available)
++                can_set_profile_and_fc = !use_highest_version;
++            #endif
++
++                if (can_set_profile_and_fc)
++                {
++                    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
++                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
++                }
++            }
+ 
 -        GLFWmonitor* fullscreen_monitor = NULL;
 -        if (params.m_Fullscreen)
 -        {
 -            fullscreen_monitor = glfwGetPrimaryMonitor();
--        }
--
-         wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
-+    #endif
++            wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
+         }
  
+-        wnd->m_Window = glfwCreateWindow(params.m_Width, params.m_Height, params.m_Title, fullscreen_monitor, NULL);
+-
          if (!wnd->m_Window)
          {
-diff --git a/engine/sound/src/devices/device_js.cpp b/engine/sound/src/devices/device_js.cpp
-index 22dbc6e5cc..606e039c38 100644
---- a/engine/sound/src/devices/device_js.cpp
-+++ b/engine/sound/src/devices/device_js.cpp
-@@ -87,6 +87,7 @@ namespace dmDeviceJS
-         assert(info);
-         JSDevice *dev = (JSDevice*) device;
-         info->m_MixRate = dmGetDeviceSampleRate(dev->devId);
-+        info->m_FrameCount = info->m_MixRate * 0.025;
-     }
- 
-     void DeviceJSStart(dmSound::HDevice device)
+             return PLATFORM_RESULT_WINDOW_OPEN_ERROR;
+@@ -282,6 +305,7 @@ namespace dmPlatform
+         switch(params.m_GraphicsApi)
+         {
+             case PLATFORM_GRAPHICS_API_OPENGL:
++            case PLATFORM_GRAPHICS_API_OPENGLES:
+                 res = OpenWindowOpenGL(window, params);
+                 break;
+             case PLATFORM_GRAPHICS_API_VULKAN:
 diff --git a/engine/sound/src/devices/device_wasapi.cpp b/engine/sound/src/devices/device_wasapi.cpp
-index 36d527b2af..c3ff55a044 100644
+index 3253f93ef2..a1253cadea 100644
 --- a/engine/sound/src/devices/device_wasapi.cpp
 +++ b/engine/sound/src/devices/device_wasapi.cpp
-@@ -359,6 +359,7 @@ namespace dmDeviceWasapi
+@@ -386,6 +386,7 @@ namespace dmDeviceWasapi
  
          info->m_MixRate = device->m_MixFormat->nSamplesPerSec;
          info->m_FrameCount = device->m_FrameCount;
@@ -1083,94 +1054,42 @@ index 36d527b2af..c3ff55a044 100644
      }
  
      static void DeviceWasapiStart(dmSound::HDevice _device)
-diff --git a/engine/sound/src/js/library_sound.js b/engine/sound/src/js/library_sound.js
-index fe7734fa31..37bc8b0e6f 100644
---- a/engine/sound/src/js/library_sound.js
-+++ b/engine/sound/src/js/library_sound.js
-@@ -34,6 +34,7 @@ var LibrarySoundDevice =
-                     shared.audioCtx = new audioCtxCtor();
-                 }
-             }
-+            console.log("<!> sampleRate", shared.audioCtx.sampleRate);
-             // Construct web audio device.
-             device = {
-                 sampleRate: shared.audioCtx.sampleRate,
-@@ -55,6 +56,7 @@ var LibrarySoundDevice =
-                     return 0;
-                 },
-                 _queue: function(samples, sample_count) {
-+                    console.log("<!> queue", samples, sample_count);
-                     var len = sample_count / this.sampleRate;
-                     // use real buffer length next time.
-                     this.bufferDuration = len;
-diff --git a/engine/sound/src/sound.cpp b/engine/sound/src/sound.cpp
-index 9208124527..a90023e0ac 100644
---- a/engine/sound/src/sound.cpp
-+++ b/engine/sound/src/sound.cpp
-@@ -256,7 +256,7 @@ namespace dmSound
-         params->m_MaxSources = 16;
-         params->m_MaxBuffers = 32;
-         params->m_BufferSize = 12 * 4096;
--        params->m_FrameCount = 768;
-+        params->m_FrameCount = 0;
-         params->m_MaxInstances = 256;
-         params->m_UseThread = true;
-     }
-@@ -359,7 +359,11 @@ namespace dmSound
-         }
+diff --git a/engine/tools/src/gdc/main.cpp b/engine/tools/src/gdc/main.cpp
+index d5d28454fe..42419d96ec 100644
+--- a/engine/tools/src/gdc/main.cpp
++++ b/engine/tools/src/gdc/main.cpp
+@@ -106,7 +106,11 @@ int main(int argc, char *argv[])
+     window_params.m_Title = "gdc";
+     window_params.m_PrintDeviceInfo = false;
+     window_params.m_OpenGLVersionHint = 33;
+-    window_params.m_GraphicsApi = dmPlatform::PLATFORM_GRAPHICS_API_OPENGL;
++    if (dmGraphics::GetInstalledAdapterFamily() == dmGraphics::ADAPTER_FAMILY_OPENGLES) {
++        window_params.m_GraphicsApi = dmPlatform::PLATFORM_GRAPHICS_API_OPENGLES;
++    } else {
++        window_params.m_GraphicsApi = dmPlatform::PLATFORM_GRAPHICS_API_OPENGL;
++    }
+     window_params.m_ContextAlphabits = 8;
  
-         sound->m_MixRate = device_info.m_MixRate;
--        sound->m_DeviceFrameCount = device_info.m_FrameCount ? device_info.m_FrameCount : params->m_FrameCount;
-+        sound->m_DeviceFrameCount = params->m_FrameCount ? params->m_FrameCount : device_info.m_FrameCount;
-+        if (!sound->m_DeviceFrameCount)
-+        {
-+            sound->m_DeviceFrameCount = 768;
-+        }
-         sound->m_Instances.SetCapacity(max_instances);
-         sound->m_Instances.SetSize(max_instances);
-         sound->m_InstancesPool.SetCapacity(max_instances);
-diff --git a/engine/sound/src/sound_common.cpp b/engine/sound/src/sound_common.cpp
-deleted file mode 100644
-index f301d6b927..0000000000
---- a/engine/sound/src/sound_common.cpp
-+++ /dev/null
-@@ -1,31 +0,0 @@
--// Copyright 2020-2024 The Defold Foundation
--// Copyright 2014-2020 King
--// Copyright 2009-2014 Ragnar Svensson, Christian Murray
--// Licensed under the Defold License version 1.0 (the "License"); you may not use
--// this file except in compliance with the License.
--//
--// You may obtain a copy of the License, together with FAQs at
--// https://www.defold.com/license
--//
--// Unless required by applicable law or agreed to in writing, software distributed
--// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
--// CONDITIONS OF ANY KIND, either express or implied. See the License for the
--// specific language governing permissions and limitations under the License.
--
--#include "sound.h"
--
--namespace dmSound
--{
--    void SetDefaultInitializeParams(InitializeParams* params)
--    {
--        memset(params, 0, sizeof(InitializeParams));
--        params->m_OutputDevice = "default";
--        params->m_MasterGain = 1.0f;
--        params->m_MaxSoundData = 128;
--        params->m_MaxSources = 16;
--        params->m_MaxBuffers = 32;
--        params->m_BufferSize = 12 * 4096;
--        params->m_FrameCount = 768;
--        params->m_MaxInstances = 256;
--    }
--}
+     dmPlatform::HWindow window = dmPlatform::NewWindow();
+diff --git a/engine/tools/src/gdc/wscript b/engine/tools/src/gdc/wscript
+index 85d3dbb728..6226e31e13 100644
+--- a/engine/tools/src/gdc/wscript
++++ b/engine/tools/src/gdc/wscript
+@@ -8,6 +8,9 @@ def configure(conf):
+ def build(bld):
+     graphics_lib = 'GRAPHICS OPENGL'
+     graphics_adapter = 'GraphicsAdapterOpenGL'
++    if bld.env.PLATFORM in ('arm64-linux'):
++        graphics_lib = 'GRAPHICS_OPENGLES OPENGLES'
++        graphics_adapter = 'GraphicsAdapterOpenGLES'
+     if waflib.Options.options.with_vulkan:
+         graphics_lib = 'GRAPHICS_VULKAN'
+         graphics_adapter = 'GraphicsAdapterVulkan'
 diff --git a/engine/tools/wscript b/engine/tools/wscript
-index 960fb697a9..8a8a3fa7ed 100755
+index 960fb697a9..dbca94d4e3 100755
 --- a/engine/tools/wscript
 +++ b/engine/tools/wscript
-@@ -45,10 +45,17 @@ def configure(conf):
+@@ -45,8 +45,11 @@ def configure(conf):
          conf.env.append_value('LINKFLAGS', ['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'AGL', '-framework', 'IOKit', '-framework', 'Carbon', '-framework', 'CoreVideo', '-framework', 'QuartzCore'])
      elif platform == 'x86_64-ios':
          pass
@@ -1181,53 +1100,28 @@ index 960fb697a9..8a8a3fa7ed 100755
 +        print("<!> graphics/tools: GLES LINKFLAGS")
 +        conf.env['LIB_X'] = ['Xext', 'X11', 'Xi', 'EGL', 'GLESv1_CM', 'GLESv2']
      elif "win32" in platform:
--        conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
-+        conf.env.append_value('LINKFLAGS', ['user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
-+        print("<!> tools: ANGLE LIBPATH AND INCLUDES")
-+        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib'])
-+        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
-+        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
+         conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dinput8.lib', 'dxguid.lib'])
      elif re.match('arm.*?android', platform):
-         conf.env.append_value('LINKFLAGS', ['-lEGL', '-lGLESv1_CM', '-lGLESv2', '-landroid'])
- 
 diff --git a/patch-and-copy-angle b/patch-and-copy-angle
 new file mode 100644
-index 0000000000..25877de7f4
+index 0000000000..836470a292
 --- /dev/null
 +++ b/patch-and-copy-angle
 @@ -0,0 +1,5 @@
 +#!/bin/bash
 +
 +git diff --cached --binary > angle.patch && cp angle.patch /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/all.patch
-+cp packages/glfw-3.4-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
-+cp packages/astcenc-8b0aa01-arm64-linux.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
++cp packages/glfw-3.4-arm64-linux-GLES.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/glfw-3.4-arm64-linux.tar.gz && rm -f angle.patch
++# cp packages/astcenc-8b0aa01-arm64-linux-GLES.tar.gz /mnt/c/Users/Artsiom/Documents/Defold/ANGLE/ci-test/
 diff --git a/scripts/build.py b/scripts/build.py
-index ccaa10a75a..f6ec2c7945 100755
+index efd07c4d5f..b29298c257 100755
 --- a/scripts/build.py
 +++ b/scripts/build.py
-@@ -35,7 +35,7 @@ from threading import Thread, Event
- from queue import Queue
- from configparser import ConfigParser
- 
--BASE_PLATFORMS = [  'x86_64-linux', #'arm64-linux',
-+BASE_PLATFORMS = [  'x86_64-linux', 'arm64-linux',
-                     'x86_64-macos', 'arm64-macos',
-                     'win32', 'x86_64-win32',
-                     'x86_64-ios', 'arm64-ios',
-@@ -107,7 +107,7 @@ PACKAGES_MACOS_ARM64="protobuf-3.20.1 luajit-2.1.0-04dca79 vpx-1.7.0 tremolo-b0c
- PACKAGES_WIN32="protobuf-3.20.1 luajit-2.1.0-04dca79 glut-3.7.6 bullet-2.77 vulkan-1.3.261.1 glfw-3.4".split()
- PACKAGES_WIN32_64="protobuf-3.20.1 luajit-2.1.0-04dca79 glut-3.7.6 sassc-5472db213ec223a67482df2226622be372921847 bullet-2.77 glslang-42d9adf5 spirv-cross-9040e0d2 spirv-tools-d24a39a7 vulkan-1.3.261.1 lipo-9ffdea2 glfw-3.4 tint-22b958 astcenc-8b0aa01".split()
- PACKAGES_LINUX_X86_64="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-ba5c010c spirv-cross-9040e0d2 spirv-tools-d24a39a7 vulkan-1.1.108  tremolo-b0cb4d1 lipo-9ffdea2 glfw-3.4 tint-22b958 sassc-5472db213ec223a67482df2226622be372921847 astcenc-8b0aa01".split()
--PACKAGES_LINUX_ARM64 ="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-2fed4fc0 spirv-cross-9040e0d2 spirv-tools-4fab7435 vulkan-v1.3.299 tremolo-b0cb4d1 lipo-abb8ab1 glfw-3.4".split() # vulkan-1.1.108  tint-22b958".split()
-+PACKAGES_LINUX_ARM64 ="protobuf-3.20.1 luajit-2.1.0-04dca79 bullet-2.77 glslang-2fed4fc0 spirv-cross-9040e0d2 spirv-tools-4fab7435 vulkan-v1.3.299 vpx-1.7.0 tremolo-b0cb4d1 lipo-abb8ab1 glfw-3.4 astcenc-8b0aa01".split() # vulkan-1.1.108  tint-22b958".split()
- PACKAGES_ANDROID="protobuf-3.20.1 android-support-multidex androidx-multidex luajit-2.1.0-04dca79 tremolo-b0cb4d1 bullet-2.77 glfw-2.7.1".split()
- PACKAGES_ANDROID.append(sdk.ANDROID_PACKAGE)
- PACKAGES_ANDROID_64="protobuf-3.20.1 android-support-multidex androidx-multidex luajit-2.1.0-04dca79 tremolo-b0cb4d1 bullet-2.77 glfw-2.7.1".split()
 @@ -1010,6 +1010,9 @@ class Configuration(object):
          if self.target_platform in ('x86_64-macos','arm64-macos','arm64-ios','x86_64-ios') and 'linux' == sys.platform:
              strip = os.path.join(sdkfolder, 'linux', sdk.PACKAGES_LINUX_CLANG, 'bin', 'x86_64-apple-darwin19-strip')
  
-+        if self.target_platform == 'arm64-linux' and self.host == 'x86_64-linux':
++        if self.target_platform == 'arm64-linux' and self.host != self.target_platform:
 +            strip = '/usr/bin/aarch64-linux-gnu-strip'
 +
          run.shell_command("%s %s" % (strip, path))
@@ -1241,7 +1135,7 @@ index ccaa10a75a..f6ec2c7945 100755
  
          return self.target_platform in supported_tests.get(self.host, []) or self.host == self.target_platform
  
-@@ -1368,9 +1372,12 @@ class Configuration(object):
+@@ -1369,9 +1373,12 @@ class Configuration(object):
          test_dir = join(self.defold_root, 'com.dynamo.cr/com.dynamo.cr.bob.test')
  
          sha1 = self._git_sha1()
@@ -1254,7 +1148,7 @@ index ccaa10a75a..f6ec2c7945 100755
              self.copy_local_bob_artefacts()
  
          env = self._form_env()
-@@ -2136,8 +2143,17 @@ class Configuration(object):
+@@ -2137,8 +2144,17 @@ class Configuration(object):
  
  
      def upload_to_archive(self, src_file, dst_path):
@@ -1274,53 +1168,11 @@ index ccaa10a75a..f6ec2c7945 100755
  
  
      def download_from_s3(self, path, url):
-diff --git a/share/ext/astcenc/build_astcenc.sh b/share/ext/astcenc/build_astcenc.sh
-index bcc3917d1b..fd776f89a5 100755
---- a/share/ext/astcenc/build_astcenc.sh
-+++ b/share/ext/astcenc/build_astcenc.sh
-@@ -19,6 +19,7 @@
- PLATFORM=$1
- PWD=$(pwd)
- SOURCE_DIR=${PWD}/source
-+SHA1=8b0aa018558028b6475a83463e29d4b8cf27de8f
- BUILD_DIR=${PWD}/build/${PLATFORM}
- 
- . ../common.sh
-@@ -45,6 +46,11 @@ case $PLATFORM in
-         CMAKE_FLAGS="-DCMAKE_OSX_ARCHITECTURES=x86_64 ${CMAKE_FLAGS}"
-         CMAKE_FLAGS="-DCMAKE_OSX_DEPLOYMENT_TARGET=${OSX_MIN_SDK_VERSION} ${CMAKE_FLAGS}"
-         ;;
-+    arm64-linux)
-+        CMAKE_FLAGS="-DARCH=aarch64 -DASTCENC_ISA_NEON=ON ${CMAKE_FLAGS}"
-+        # Need to setup clang on linux
-+        cmi_setup_cc $PLATFORM
-+        ;;
-     x86_64-linux)
-         # Need to setup clang on linux
-         cmi_setup_cc $PLATFORM
-@@ -64,6 +70,7 @@ esac
- # Follow the build instructions on https://github.com/ARM-software/astc-encoder
- if [ ! -d "$SOURCE_DIR" ]; then
-     git clone https://github.com/ARM-software/astc-encoder.git $SOURCE_DIR
-+    (cd $SOURCE_DIR && git reset --hard $SHA1)
- fi
- 
- mkdir -p ${BUILD_DIR}
-@@ -83,6 +90,9 @@ case $PLATFORM in
-     x86_64-macos)
-         LIB_NAME=libastcenc-sse4.1-static.a
-         ;;
-+    arm64-linux)
-+        LIB_NAME=libastcenc-neon-static.a
-+        ;;
-     x86_64-linux)
-         LIB_NAME=libastcenc-native-static.a
-         ;;
 diff --git a/share/ext/common.sh b/share/ext/common.sh
-index 998fb7501b..5028b10192 100755
+index a67c99afd4..40f1ed5a8f 100755
 --- a/share/ext/common.sh
 +++ b/share/ext/common.sh
-@@ -384,10 +384,11 @@ function cmi_setup_cc() {
+@@ -386,10 +386,11 @@ function cmi_setup_cc() {
              export CXXFLAGS="${CXXFLAGS} --target=aarch64-unknown-linux-gnu -fPIC"
              export CPPFLAGS="${CPPFLAGS} --target=aarch64-unknown-linux-gnu -fPIC"
  
@@ -1364,3 +1216,16 @@ index e019f0634b..76fed11ce8 100755
  esac
  
  function cmi_unpack() {
+diff --git a/share/extender/build_input.yml b/share/extender/build_input.yml
+index 781250fdee..7e49752b60 100644
+--- a/share/extender/build_input.yml
++++ b/share/extender/build_input.yml
+@@ -11,7 +11,7 @@ context:
+                   "engine_service","engine_service_null","libengine_service.lib","libengine_service_null.lib",
+                   "script_box2d", "script_box2d_null", "libscript_box2d.lib", "libscript_box2d_null.lib"]
+     allowedSymbols: ["DefaultSoundDevice", "NullSoundDevice", "AudioDecoderWav", "CrashExt", "AudioDecoderStbVorbis", "GraphicsAdapterWebGPU",
+-                    "ProfilerExt", "GraphicsAdapterOpenGL", "GraphicsAdapterVulkan", "GraphicsAdapterNull",
++                    "ProfilerExt", "GraphicsAdapterOpenGL", "GraphicsAdapterOpenGLES", "GraphicsAdapterVulkan", "GraphicsAdapterNull",
+                     "LiveUpdateExt", "ScriptBox2DExt", "ScriptImageExt", "ScriptModelExt", "ScriptTypesExt"]
+     defines: ['DLIB_LOG_DOMAIN="{{extension_name_upper}}"']
+ 

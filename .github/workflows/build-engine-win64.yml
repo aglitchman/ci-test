@@ -7,13 +7,13 @@ name: Build Defold Windows x86_64
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
 env:
   DM_PACKAGES_URL: ./local_sdks
-  BUILD_BRANCH: 1.9.6
+  BUILD_BRANCH: 1.9.7
   # Settings / Secrets and variables / Actions / Variables (tab) -> 
   #   New repository variable -> 
   #   `WIN32_SDK_RUN_ID` = copy-paste from the run id of the `package-win32-sdk.yml` run, i.e.
