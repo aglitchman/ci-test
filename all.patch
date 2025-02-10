@@ -499,22 +499,23 @@ index b67dbe7530..c8d22e462f 100755
          graphics_lib += ' GRAPHICS_VULKAN VULKAN'
          graphics_lib_symbols.append('GraphicsAdapterVulkan')
 diff --git a/engine/engine/wscript b/engine/engine/wscript
-index e002b73190..8df493de05 100644
+index e002b73190..58e0f6aaf5 100644
 --- a/engine/engine/wscript
 +++ b/engine/engine/wscript
-@@ -106,7 +106,11 @@ def configure(conf):
-         conf.env['STLIB_CPP_RUNTIME'] = 'c++_static'
- 
+@@ -108,6 +108,13 @@ def configure(conf):
      elif target_os == "win":
--        conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
-+        conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
-+
-+        print("<!> engine: ANGLE LIBPATH AND INCLUDES + TEST PATH %s" % (build_util.get_dynamo_ext("include", "AL")))
-+        conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
-+        conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
+         conf.env.append_value('LINKFLAGS', ['opengl32.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
  
++        # ANGLE
++        # conf.env.append_value('LINKFLAGS', ['libEGL.dll.lib', 'libGLESv1_CM.dll.lib', 'libGLESv2.dll.lib', 'user32.lib', 'shell32.lib', 'xinput9_1_0.lib', 'dbghelp.lib', 'dinput8.lib', 'dxguid.lib'])
++
++        # print("<!> engine: ANGLE LIBPATH AND INCLUDES + TEST PATH %s" % (build_util.get_dynamo_ext("include", "AL")))
++        # conf.env.append_value('INCLUDES', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\include')
++        # conf.env.append_value('LIBPATH', 'D:\\a\\ci-test\\ci-test\\patches\\angle\\out\\Debug')
++
          # For Vulkan
          if waflib.Options.options.with_vulkan:
+             conf.env.append_value('LINKFLAGS', ['vulkan-1.lib'])
 diff --git a/engine/gamesys/src/gamesys/components/comp_model.cpp b/engine/gamesys/src/gamesys/components/comp_model.cpp
 index 34afa2123c..18d3f84add 100644
 --- a/engine/gamesys/src/gamesys/components/comp_model.cpp
