@@ -1,7 +1,7 @@
 # Keep this in sync with
 # https://github.com/defold/defold/blob/dev/.github/workflows/engine-nightly.yml
 
-name: Build Defold Windows x86_64
+name: Build Defold Linux
 
 # Controls when the workflow will run
 on:
@@ -12,44 +12,30 @@ on:
   #     - main
 
 env:
-  DM_PACKAGES_URL: ./local_sdks
-  BUILD_BRANCH: 1.9.7
-  # Settings / Secrets and variables / Actions / Variables (tab) -> 
-  #   New repository variable -> 
-  #   `WIN32_SDK_RUN_ID` = copy-paste from the run id of the `package-win32-sdk.yml` run, i.e.
-  #   "https://github.com/example/repo/actions/runs/12397740775" <- 12397740775 is the run id
-  WIN32_SDK_RUN_ID: ${{ vars.WIN32_SDK_RUN_ID }}
+  DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
+  BUILD_BRANCH: 1.10.0
 
 jobs:
-  bld-eng-windows:
+  bld-eng-linux:
+    runs-on: ubuntu-22.04-arm
     strategy:
       matrix:
-        platform: [x86_64-win32]
-    runs-on: windows-2022
+        platform: [arm64-linux]
     steps:
       - name: Checkout Defold
         uses: actions/checkout@v4
         with:
           repository: defold/defold
-          ref: ${{env.BUILD_BRANCH}}
+          ref: ${{ env.BUILD_BRANCH }}
 
       - name: Checkout patches
         uses: actions/checkout@v4
         with:
           path: patches
 
-      - name: Apply patches
-        run: git apply patches/all.patch
-
-      - name: Download SDKs
-        uses: actions/download-artifact@v4
-        with:
-          name: local_sdks
-          path: local_sdks
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ env.WIN32_SDK_RUN_ID }}
-      - shell: bash
-        run: ls -l local_sdks
+      # - name: Apply patches
+      #   run: |
+      #     git apply patches/all.patch
 
       - name: Install Python
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
@@ -62,23 +48,19 @@ jobs:
           java-version: '21.0.5+11.0.LTS'
           distribution: temurin
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.x'
-
       - name: Install dependencies
-        shell: bash
         run: ci/ci.sh install --platform=${{ matrix.platform }}
+      - run: |
+          clang -v
 
       - name: Build
-        shell: bash
-        run: ci/ci.sh --platform=${{ matrix.platform }} --skip-builtins --skip-tests --skip-build-tests --skip-docs engine
+        run: ci/ci.sh --platform=${{ matrix.platform }} --archive --skip-builtins --skip-docs engine
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: defold-${{ matrix.platform }}
           path: |
+            tmp/dynamo_home/archive
             tmp/dynamo_home/bin/${{ matrix.platform }}
             tmp/dynamo_home/lib/${{ matrix.platform }}

@@ -7,9 +7,9 @@ name: Build Defold Web (.wasm)
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 
 env:
   BUILD_BRANCH: 1.9.7
