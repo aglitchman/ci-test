@@ -1,7 +1,7 @@
 # Keep this in sync with
 # https://github.com/defold/defold/blob/dev/.github/workflows/engine-nightly.yml
 
-name: Build Defold Linux
+name: Build Defold Linux x86_64
 
 # Controls when the workflow will run
 on:

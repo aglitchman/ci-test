@@ -1,15 +1,15 @@
 # Keep this in sync with
 # https://github.com/defold/defold/blob/dev/.github/workflows/engine-nightly.yml
 
-name: Build Defold Linux
+name: Build Defold Linux ARM64
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
 env:
   DM_PACKAGES_URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/
