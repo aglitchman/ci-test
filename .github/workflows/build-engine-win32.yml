@@ -130,10 +130,10 @@ jobs:
       - name: Zip extension folder
         shell: bash
         run: |
-          zip -r "graphics_angle-${{ env.BUILD_BRANCH }}.zip" "extension"
+          zip -r "graphics_angle-defold-${{ env.BUILD_BRANCH }}.zip" "extension"
 
       - name: Release extension archive
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          files: graphics_angle-${{ env.BUILD_BRANCH }}.zip
+          files: graphics_angle-defold-${{ env.BUILD_BRANCH }}.zip

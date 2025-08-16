@@ -5,14 +5,63 @@ This is a native extension for Defold that replaces the OpenGL graphics adapter 
 Supported operating system: Windows.
 
 Reasons to use this native extension in your projects:
-1) The Defold engine pegs one CPU core at 100% without good reason.
-2) An empty project does not deliver a stable 60 FPS on a 60 Hz monitor.
-3) Your GPU does not support OpenGL 3.3 but does support Direct3D 9 like good old Intel GMA 950.
-4) You are releasing a game on Steam/itch.io/GOG, etc., and want fewer issues running on older devices or devices with problematic graphics drivers.
+* The Defold engine pegs one CPU core at 100% without good reason.
+* An empty project does not deliver a stable 60 FPS on a 60 Hz monitor.
+* Your GPU does not support OpenGL 3.3 but does support Direct3D 9 like good old Intel GMA 950.
+* You are planning to release a game on Steam/itch.io/GOG, etc., and want fewer issues running on older devices or devices with problematic graphics drivers.
 
 ## How to use it
 
-TODO
+1) Add the extension zip file as dependency to your project from [the release page](https://github.com/indiesoftby/defold-graphics-angle/releases/tag/1.0.0).
+2) Open your `game.project` file in any external text editor and add the following lines to end of the file (example: [game.project](extension/game.project)):
+```ini
+[shader]
+output_glsl_es100 = 1
+output_glsl_es300 = 1
+```
+
+If you did everything correctly, then after launching your game you will see in the logs:
+```
+INFO:GRAPHICS: Installed graphics device 'ADAPTER_FAMILY_OPENGLES'
+```
+
+If you enable the `Display / Display Device Info` option in `game.project`, you will see something like this:
+```
+INFO:GRAPHICS: Device: OpenGL ES
+INFO:GRAPHICS: Renderer: ANGLE (Intel, Intel(R) Arc(TM) B580 Graphics (0x0000E20B) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.101.6913)
+INFO:GRAPHICS: Version: OpenGL ES 3.0.0 (ANGLE 2.1.25890 git hash: 5fb7715997c4)
+INFO:GRAPHICS: Vendor: Google Inc. (Intel)
+INFO:GRAPHICS: Extensions:
+INFO:GRAPHICS:   GL_AMD_performance_monitor
+INFO:GRAPHICS:   GL_ANGLE_base_vertex_base_instance_shader_builtin
+INFO:GRAPHICS:   GL_ANGLE_blob_cache
+...
+```
+
+If you are facing problems with the extension, please check the [Known limitations or incompatibility issues](#known-limitations-or-incompatibility-issues) section and fill an issue.
+
+### Known limitations or incompatibility issues
+
+#### [Dear ImGUI](https://github.com/britzl/extension-imgui)
+
+Dear ImGUI is not compatible with ANGLE, because it assumes that the graphics adapter is OpenGL. The workaround is:
+
+1) Copy the `imgui` folder from the extension to your project.
+2) Modify the `imgui/src/imgui/imconfig.h` file:
+```c
+#pragma once
+
+#if defined(DM_PLATFORM_HTML5) or defined(USE_GLES2)
+  #define IMGUI_IMPL_OPENGL_ES2
+
+// etc...
+```
+3) Modify the `imgui/ext.manifest` file:
+```
+    win32:
+        context:
+            defines:    ["STBI_NO_SIMD", "USE_GLES2"]
+```
 
 ## How it is implemented
 
