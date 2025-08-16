@@ -1,0 +1,40 @@
+function init(self)
+    print("Hello!")
+    msg.post(".", "acquire_input_focus")
+    -- msg.post("@system:", "toggle_profile")
+
+    self.frames = {}
+end
+
+function final(self)
+end
+
+function update(self, dt)
+    self.frames[#self.frames + 1] = socket.gettime()
+    local fps = 0
+    if #self.frames == 61 then
+        table.remove(self.frames, 1)
+        fps = 1 / ((self.frames[#self.frames] - self.frames[1]) / (#self.frames - 1))
+    end
+    label.set_text("#label", ("FPS: %.2f"):format(fps))	
+end
+
+function fixed_update(self, dt)
+end
+
+function on_message(self, message_id, message, sender)
+end
+
+function on_input(self, action_id, action)
+    -- Shutdown your app on "back" button:
+    if action_id == hash("gamepad_back") and action.pressed then
+        sys.exit(0)
+    elseif action_id == hash("key_r") and action.pressed then
+        sys.reboot()
+    elseif action_id == hash("key_space") and action.pressed then
+
+    end
+end
+
+function on_reload(self)
+end

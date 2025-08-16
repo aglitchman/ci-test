@@ -1,0 +1,84 @@
+# https://medium.com/@grplyler/building-and-linking-googles-angle-with-raylib-on-macos-67b07cd380a3
+# https://stackoverflow.com/questions/58903643/setting-up-a-c-project-using-angle-and-glfw-on-windows
+# https://github.com/zwang/helloTriangle/tree/main/include
+# https://discourse.glfw.org/t/how-to-use-angle-glfw/2429/7
+
+name: Build Google ANGLE
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  DEPOT_TOOLS_WIN_TOOLCHAIN: 0
+  ANGLE_REF: chromium/7354
+  ANGLE_VERSION: 5fb77159
+
+jobs:
+  build-angle:
+    strategy:
+      matrix:
+        platform: [x86_64-win32, win32]
+        include:
+          - platform: x86_64-win32
+            target_cpu: x64
+          - platform: win32
+            target_cpu: x86
+    runs-on: windows-2022
+    steps:
+      # The point is to checkout from Google sources, since Github version is just a mirror.
+      - name: Checkout ANGLE
+        run: |
+          git clone https://chromium.googlesource.com/angle/angle .
+          git checkout ${{ env.ANGLE_REF }}
+
+      - name: Update git config for Depot Tools
+        run: |
+            git config --global core.autocrlf false
+            git config --global core.filemode false
+            git config --global core.fscache true
+            git config --global core.preloadindex true
+
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
+
+      - name: Init gclient config
+        run: python3 scripts/bootstrap.py
+
+      - name: Sync deps
+        run: gclient sync
+
+      - name: Create build
+        # Look at gni/angle.gni and doc/DevSetup.md for more details
+        run: |
+          gn help target_cpu
+          gn gen out/Release --args='target_cpu=\"${{ matrix.target_cpu }}\" is_debug=false is_component_build=false angle_enable_d3d9=true angle_enable_d3d11=true angle_enable_gl=true angle_enable_null=false angle_enable_vulkan=false angle_enable_wgpu=false angle_enable_swiftshader=false angle_build_tests=false'
+
+      - name: Build
+        run: autoninja -C out/Release
+
+      - name: Copy ANGLE as package
+        shell: bash
+        run: |
+          mkdir -p angle_archive/include
+          mkdir -p angle_archive/lib/${{ matrix.platform }}
+          cp -r include/* angle_archive/include/
+          cp out/Release/libEGL.dll angle_archive/lib/${{ matrix.platform }}/
+          cp out/Release/libEGL.dll.lib angle_archive/lib/${{ matrix.platform }}/
+          cp out/Release/libGLESv2.dll angle_archive/lib/${{ matrix.platform }}/
+          cp out/Release/libGLESv2.dll.lib angle_archive/lib/${{ matrix.platform }}/
+          cp out/Release/d3dcompiler_47.dll angle_archive/lib/${{ matrix.platform }}/
+          tar -czf angle-${{ env.ANGLE_VERSION }}-${{ matrix.platform }}.tar.gz -C angle_archive .
+          rm -rf angle_archive
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: angle-${{ env.ANGLE_VERSION }}-${{ matrix.platform }}
+          path: |
+            angle-${{ env.ANGLE_VERSION }}-${{ matrix.platform }}.tar.gz
+            include
+            out
+            !out/Debug/obj
+            !out/Release/obj

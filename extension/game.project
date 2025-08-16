@@ -1,0 +1,30 @@
+[bootstrap]
+main_collection = /example/example.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 720
+height = 480
+display_device_info = 1
+
+[project]
+title = graphics_angle
+
+[library]
+include_dirs = graphics_angle
+
+[input]
+game_binding = /builtins/input/all.input_bindingc
+
+[physics]
+type = 2D
+use_fixed_timestep = 1
+max_fixed_timesteps = 0
+debug = 1
+
+[shader]
+output_glsl_es100 = 1
+output_glsl_es300 = 1
+
