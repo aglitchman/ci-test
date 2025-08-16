@@ -1,2 +1,3 @@
 *.pdb
 /extension/graphics_angle/lib
+/extension/graphics_angle/res
