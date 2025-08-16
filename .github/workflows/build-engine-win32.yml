@@ -14,6 +14,7 @@ on:
 env:
   DM_PACKAGES_URL: ./local_sdks
   BUILD_BRANCH: ${{ vars.BUILD_BRANCH }}
+  RELEASE_TAG: ${{ vars.RELEASE_TAG }}
   # Settings / Secrets and variables / Actions / Variables (tab) -> 
   #   New repository variable -> 
   #   `WIN32_SDK_RUN_ID` = copy-paste from the run id of the `package-win32-sdk.yml` run, i.e.
@@ -92,3 +93,47 @@ jobs:
           path: |
             tmp/dynamo_home/bin/${{ matrix.platform }}
             tmp/dynamo_home/lib/${{ matrix.platform }}
+
+  package-extension:
+    needs: bld-eng-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - name: Download artifact x86_64-win32
+        uses: actions/download-artifact@v4
+        with:
+          name: defold-x86_64-win32
+          path: artifacts/defold-x86_64-win32
+
+      - name: Download artifact win32
+        uses: actions/download-artifact@v4
+        with:
+          name: defold-win32
+          path: artifacts/defold-win32
+
+      - name: Extract ANGLE libs into extension
+        run: |
+          mkdir -p extension/graphics_angle/lib
+          tar -xzf angle-5fb77159-win32.tar.gz -C extension/graphics_angle ./lib
+          mv extension/graphics_angle/lib/win32 extension/graphics_angle/lib/x86-win32
+          tar -xzf angle-5fb77159-x86_64-win32.tar.gz -C extension/graphics_angle ./lib
+
+      - name: Prepare extension lib folders and copy libgraphics_opengles.lib
+        run: |
+          cp artifacts/defold-win32/lib/win32/libgraphics_opengles.lib extension/graphics_angle/lib/x86-win32/
+          cp artifacts/defold-x86_64-win32/lib/x86_64-win32/libgraphics_opengles.lib extension/graphics_angle/lib/x86_64-win32/
+
+      - name: Zip extension folder
+        shell: bash
+        run: |
+          zip -r "graphics_angle-${{ env.BUILD_BRANCH }}.zip" "extension"
+
+      - name: Release extension archive
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: graphics_angle-${{ env.BUILD_BRANCH }}.zip
