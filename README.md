@@ -1,3 +1,5 @@
+[![ANGLE Cover](cover.jpg)](https://github.com/indiesoftby/defold-graphics-angle)
+
 # ANGLE for Defold (Preview)
 
 Add this extension to your project so that your Defold game on Windows runs through DirectX 9 or 11, has high compatibility with legacy devices and video drivers, since DirectX is a first-party API unlike OpenGL.
