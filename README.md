@@ -12,6 +12,7 @@ Reasons to use this native extension in your projects:
 * The Defold engine pegs one CPU core at 100% without good reason.
 * An empty project does not deliver a stable 60 FPS on a 60 Hz monitor.
 * Your GPU does not support OpenGL 3.3 but does support Direct3D 9 like good old Intel GMA 950.
+* Your game crashes due to use RivaTuner Statistics Server (usually comes with MSI Afterburner).
 * You are planning to release a game on Steam/itch.io/GOG, etc., and want fewer issues running on older devices or devices with problematic graphics drivers.
 
 ## How to use it
@@ -45,6 +46,16 @@ INFO:GRAPHICS:   GL_ANGLE_blob_cache
 If you are facing problems with the extension, please check the [Known limitations or incompatibility issues](#known-limitations-or-incompatibility-issues) section and fill an issue.
 
 ### Known limitations or incompatibility issues
+
+#### Excluding GL ES 1.00 shader language
+
+The configuration above ensures maximum GPU compatibility by generating shaders for both GL ES 1.00 and GL ES 3.00 shader languages, covering support for OpenGL ES 2.0 and 3.0 for the widest range of graphics hardware. If you want to exclude GL ES version 1.00 shaders, you should remove the `output_glsl_es100` line from `game.project` and add the line:
+
+```ini
+[shader]
+exclude_gles_sm100 = 1
+output_glsl_es300 = 1
+```
 
 #### [Dear ImGUI](https://github.com/britzl/extension-imgui)
 
