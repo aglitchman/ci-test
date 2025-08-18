@@ -19,4 +19,4 @@ if [ $# -gt 0 ]; then
 else
     git commit -m "Update patch #$NEXT_NUMBER"
 fi
-git push
+# git push

@@ -14,7 +14,7 @@ index 75d8864a2f..be1a262144 100644
  PACKAGES_WIN32_SDK_10=f"WindowsKits-{VERSION_WINDOWS_SDK_10}"
  
 diff --git a/build_tools/waf_dynamo.py b/build_tools/waf_dynamo.py
-index f8db79071b..ba2b1b9224 100644
+index f8db79071b..6d230d91eb 100644
 --- a/build_tools/waf_dynamo.py
 +++ b/build_tools/waf_dynamo.py
 @@ -79,7 +79,7 @@ def platform_supports_feature(platform, feature, data):
@@ -36,14 +36,6 @@ index f8db79071b..ba2b1b9224 100644
      else:
          use_opengl = True
          use_vulkan = Options.options.with_vulkan
-@@ -495,6 +498,7 @@ def default_flags(self):
-             if f == 'CXXFLAGS':
-                 self.env.append_value(f, ['-fno-rtti'])
- 
-+        print("<!> linkflags: ", f'--target={clang_arch}', build_util.get_target_platform())
-         self.env.append_value('LINKFLAGS', [f'--target={clang_arch}'])
- 
-     elif TargetOS.MACOS == target_os:
 diff --git a/engine/engine/wscript b/engine/engine/wscript
 index 0be334ad27..c27ec6235d 100644
 --- a/engine/engine/wscript
@@ -70,7 +62,7 @@ index 8f49d4c1d3..1d865ecebe 100644
          }
          return selected_shader;
 diff --git a/engine/graphics/src/opengl/graphics_opengl.cpp b/engine/graphics/src/opengl/graphics_opengl.cpp
-index 4abb76a60b..4c36debde4 100644
+index 4abb76a60b..1e7d566e78 100644
 --- a/engine/graphics/src/opengl/graphics_opengl.cpp
 +++ b/engine/graphics/src/opengl/graphics_opengl.cpp
 @@ -84,116 +84,7 @@
@@ -296,16 +288,15 @@ index 4abb76a60b..4c36debde4 100644
          context->m_IsGles3Version = 1; // 0 == gles 2, 1 == gles 3
          context->m_PipelineState  = GetDefaultPipelineState();
  
-@@ -2982,11 +2775,7 @@ static void LogFrameBufferError(GLenum status)
- 
-         if (context->m_IsShaderLanguageGles) // 0 == glsl, 1 == gles
+@@ -2984,9 +2777,9 @@ static void LogFrameBufferError(GLenum status)
          {
--            if (context->m_IsGles3Version)
--            {
+             if (context->m_IsGles3Version)
+             {
 -                return language == ShaderDesc::LANGUAGE_GLES_SM300;
--            }
++                return language == ShaderDesc::LANGUAGE_GLES_SM100 || language == ShaderDesc::LANGUAGE_GLES_SM300;
+             }
 -            return language == ShaderDesc::LANGUAGE_GLES_SM100;
-+            return language == ShaderDesc::LANGUAGE_GLES_SM100 || language == ShaderDesc::LANGUAGE_GLES_SM300;
++            return language == ShaderDesc::LANGUAGE_GLES_SM300;
          }
          else if (shader_type == ShaderDesc::SHADER_TYPE_COMPUTE)
          {
